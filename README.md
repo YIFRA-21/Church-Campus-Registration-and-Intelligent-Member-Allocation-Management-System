@@ -101,3 +101,4 @@ npx ts-node src/tests/allocation_engine_test.ts
 - [x] Repeatable runs with identical inputs produce 100% identical results.
 - [x] Allocation previews do not modify active member records until approved.
 - [x] Allocation commitments execute atomically inside database transactions.
+
