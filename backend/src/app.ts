@@ -2,10 +2,11 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes";
+import campusRoutes from "./routes/campus.routes";
+import userRoutes from "./routes/user.routes";
 
 export const app = express();
 
-// Security and standard middlewares
 app.use(helmet());
 app.use(
   cors({
@@ -21,8 +22,10 @@ app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Mount Module 1: Auth Routes
+// Mount Routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/campuses", campusRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // Global Error Handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -32,4 +35,3 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     message: process.env.NODE_ENV === "development" ? err.message : "An unexpected error occurred",
   });
 });
-

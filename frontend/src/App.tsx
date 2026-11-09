@@ -2,8 +2,11 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AppLayout } from "./components/layout/AppLayout";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { CampusesPage } from "./pages/CampusesPage";
+import { UsersPage } from "./pages/UsersPage";
 
 export const App: React.FC = () => {
   return (
@@ -15,7 +18,29 @@ export const App: React.FC = () => {
             path="/"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <AppLayout>
+                  <DashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campuses"
+            element={
+              <ProtectedRoute requiredPermission="campus.view">
+                <AppLayout>
+                  <CampusesPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredPermission="user.manage">
+                <AppLayout>
+                  <UsersPage />
+                </AppLayout>
               </ProtectedRoute>
             }
           />
@@ -25,5 +50,5 @@ export const App: React.FC = () => {
     </AuthProvider>
   );
 };
-export default App;
 
+export default App;
