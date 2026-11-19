@@ -228,46 +228,217 @@
 }
 
 // ----------------------------------------------------------------------------
-// 5. AUDIT TIMELINE
+// 6. MODULE 4: IMPORT & VALIDATION MANAGEMENT
 // ----------------------------------------------------------------------------
-.page-audit {
-  .audit-timeline {
+.page-import {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  // Header Banner
+  .import-header-card {
+    background: linear-gradient(135deg, rgba(17, 26, 46, 0.95) 0%, rgba(23, 35, 59, 0.95) 50%, rgba(30, 44, 71, 0.9) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 1.25rem;
+    padding: 1.5rem 2rem;
     position: relative;
-    padding-left: 2rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 
     &::before {
       content: "";
       position: absolute;
-      left: 0.75rem;
-      top: 0.5rem;
-      bottom: 0.5rem;
-      width: 2px;
-      background: linear-gradient(180deg, $color-primary-500 0%, $color-cyan-accent 100%);
+      top: -50px;
+      right: -50px;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+      pointer-events: none;
     }
+  }
 
-    .timeline-node {
-      position: relative;
-      margin-bottom: 2rem;
+  // Navigation Tabs
+  .import-tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem;
+    background: rgba(17, 26, 46, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    overflow-x: auto;
 
-      .node-marker {
-        position: absolute;
-        left: -2rem;
-        top: 0.25rem;
-        width: 1.5rem;
-        height: 1.5rem;
-        border-radius: $radius-full;
-        background: $color-obsidian;
-        border: 2px solid $color-primary-500;
-        @include flex-center;
-        box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+    .import-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.125rem;
+      border-radius: 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #94A3B8;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &:hover {
+        color: #F8FAFC;
+        background: rgba(255, 255, 255, 0.04);
       }
 
-      .node-card {
-        @include glass-panel(0.9, 12px);
-        border-radius: $radius-xl;
-        padding: 1.25rem;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+      &.active {
+        color: #FFFFFF;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+      }
+
+      .tab-badge {
+        font-size: 0.6875rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.15);
+        color: #FFFFFF;
       }
     }
   }
+
+  // KPI Stat Cards
+  .import-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+
+    .import-kpi-card {
+      background: #111A2E;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        border-color: rgba(59, 130, 246, 0.35);
+      }
+
+      .kpi-icon-wrap {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.625rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .kpi-title {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #94A3B8;
+      }
+
+      .kpi-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #F8FAFC;
+        line-height: 1;
+      }
+
+      .kpi-sub {
+        font-size: 0.75rem;
+        color: #64748B;
+      }
+    }
+  }
+
+  // CSV Dropzone
+  .import-dropzone {
+    border: 2px dashed rgba(59, 130, 246, 0.4);
+    border-radius: 1.25rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: rgba(17, 26, 46, 0.5);
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover, &.is-dragover {
+      border-color: #3B82F6;
+      background: rgba(30, 44, 71, 0.4);
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.15);
+    }
+
+    .dropzone-icon {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 1rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60A5FA;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+  }
+
+  // Mapping Grid
+  .mapping-card {
+    background: #111A2E;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+
+  // Duplicate Review Side-by-Side
+  .duplicate-review-card {
+    background: #111A2E;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+
+      .compare-side {
+        background: #17233B;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.875rem;
+        padding: 1.25rem;
+
+        &.staged {
+          border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        &.existing {
+          border-color: rgba(16, 185, 129, 0.3);
+        }
+      }
+    }
+
+    .match-score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  }
 }
+

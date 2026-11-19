@@ -1028,6 +1028,10 @@ export class MemberService {
     return member || null;
   }
 
+  static async createMember(input: CreateMemberInput, currentUser: AuthSessionPayload): Promise<MemberRecord> {
+    return this.create(input, currentUser);
+  }
+
   static async create(input: CreateMemberInput, currentUser: AuthSessionPayload): Promise<MemberRecord> {
     if (currentUser.role !== "ADMIN") {
       throw new Error("Forbidden: Only Administrators can register new members");
