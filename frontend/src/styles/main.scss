@@ -1,39 +1,97 @@
 // ============================================================================
 // C-CIMAS SCSS MASTER DESIGN SYSTEM
-// Dark Obsidian CORTEX Aesthetic + Bootstrap 5.3 + Bootstrap Icons
 // ============================================================================
-
-// 1. Forward abstracts & modules
-@forward "abstracts/variables";
-@forward "abstracts/mixins";
-@forward "components/cards";
-@forward "components/badges";
-@forward "components/tables";
-@forward "components/buttons";
-@forward "components/forms";
-@forward "components/modals";
-@forward "modules/member-dashboard";
-@forward "modules/member-profile";
+@forward "variables";
+@forward "mixins";
 @forward "animations";
 @forward "components";
+@forward "cards";
 @forward "tables";
 @forward "badges";
-@forward "cards";
+@forward "modals";
 @forward "pages";
 
-// 2. External Vendor Frameworks
-@import "bootstrap/dist/css/bootstrap.min.css";
-@import "bootstrap-icons/font/bootstrap-icons.css";
+@use "variables" as *;
+@use "mixins" as *;
 
-// 3. Global body defaults for obsidian glassmorphism
-body {
-  background-color: #070b13 !important;
-  color: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  overflow-x: hidden;
+// --- Global Interactive Enhancements ---
+html {
+  scroll-behavior: smooth;
 }
 
-// Reset bootstrap link styling to avoid blue underlines
-a {
-  text-decoration: none !important;
+// Custom Smooth Scrollbars for entire application
+body {
+  @include custom-scrollbar(8px, rgba(7, 11, 19, 0.4), rgba(99, 102, 241, 0.3));
+}
+
+// Glowing Interactive Focus for all inputs and form fields
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: $color-primary-500 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  transition: box-shadow $transition-fast, border-color $transition-fast;
+}
+
+// Dynamic Action Buttons
+.cimas-btn-dynamic {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  transition: transform $transition-fast, box-shadow $transition-fast, filter $transition-fast;
+  border-radius: $radius-xl;
+
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.96);
+  }
+
+  &--primary {
+    background: $grad-accent-primary;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+    }
+  }
+
+  &--gold {
+    background: $grad-accent-gold;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+    }
+  }
+
+  &--emerald {
+    background: $grad-accent-emerald;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+  }
+}
+
+// Subtle grid mesh background pattern for dashboard containers
+.cimas-mesh-bg {
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
 }
