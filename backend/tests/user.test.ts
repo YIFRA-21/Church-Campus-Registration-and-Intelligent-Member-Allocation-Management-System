@@ -2,82 +2,73 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { app } from "../src/app";
 
-describe("Module 2: User and Role Management API Tests", () => {
-  let superAdminToken: string;
-  let campusAdminToken: string;
-  let regOfficerToken: string;
+describe("Module 1/4: User and Evaluator Account Management Tests (2 Official Roles)", () => {
+  let adminToken: string;
+  let evaluatorToken: string;
 
   it("authenticates roles for user management tests", async () => {
     const adminRes = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: "admin@c-cimas.org", password: "admin123" });
-    superAdminToken = adminRes.body.data.token;
+    adminToken = adminRes.body.data.token;
 
-    const campusRes = await request(app)
+    const evalRes = await request(app)
       .post("/api/v1/auth/login")
-      .send({ email: "campusadmin@c-cimas.org", password: "admin123" });
-    campusAdminToken = campusRes.body.data.token;
-
-    const officerRes = await request(app)
-      .post("/api/v1/auth/login")
-      .send({ email: "regofficer@c-cimas.org", password: "admin123" });
-    regOfficerToken = officerRes.body.data.token;
+      .send({ email: "evaluator@c-cimas.org", password: "admin123" });
+    evaluatorToken = evalRes.body.data.token;
   });
 
-  it("returns role catalog listing all 6 primary roles", async () => {
+  it("returns role catalog listing strictly TWO official roles (ADMIN and EVALUATOR)", async () => {
     const res = await request(app)
       .get("/api/v1/users/roles")
-      .set("Authorization", `Bearer ${superAdminToken}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data.roles.length).toBe(6);
+    expect(res.body.data.roles.length).toBe(2);
     const roleNames = res.body.data.roles.map((r: { name: string }) => r.name);
-    expect(roleNames).toContain("SUPER_ADMIN");
-    expect(roleNames).toContain("CAMPUS_ADMIN");
-    expect(roleNames).toContain("REGISTRATION_OFFICER");
-    expect(roleNames).toContain("DEPT_MANAGER");
-    expect(roleNames).toContain("EVALUATOR");
-    expect(roleNames).toContain("VIEWER_AUDITOR");
+    expect(roleNames).toEqual(expect.arrayContaining(["ADMIN", "EVALUATOR"]));
+    expect(roleNames).not.toContain("SUPER_ADMIN");
+    expect(roleNames).not.toContain("DEPT_MANAGER");
   });
 
-  it("denies access to Registration Officer without user.manage permission (403)", async () => {
+  it("denies access to Evaluator without user.manage permission (403)", async () => {
     const res = await request(app)
       .get("/api/v1/users")
-      .set("Authorization", `Bearer ${regOfficerToken}`);
+      .set("Authorization", `Bearer ${evaluatorToken}`);
 
     expect(res.status).toBe(403);
     expect(res.body.error).toBe("Forbidden");
   });
 
-  it("allows Campus Admin to create a registration officer within their campus", async () => {
+  it("allows Admin to create a new Evaluator account", async () => {
     const res = await request(app)
       .post("/api/v1/users")
-      .set("Authorization", `Bearer ${campusAdminToken}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
-        email: "newofficer@c-cimas.org",
+        email: "newevaluator@c-cimas.org",
         password: "securePassword123",
-        fullName: "Abebe Lemma",
-        role: "REGISTRATION_OFFICER",
+        fullName: "Deacon Yohannes Wolde",
+        role: "EVALUATOR",
       });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.user.email).toBe("newofficer@c-cimas.org");
-    expect(res.body.data.user.role).toBe("REGISTRATION_OFFICER");
+    expect(res.body.data.user.email).toBe("newevaluator@c-cimas.org");
+    expect(res.body.data.user.role).toBe("EVALUATOR");
   });
 
-  it("prevents Campus Admin from creating a Super Admin account (403)", async () => {
+  it("rejects creating user with invalid role outside ADMIN or EVALUATOR", async () => {
     const res = await request(app)
       .post("/api/v1/users")
-      .set("Authorization", `Bearer ${campusAdminToken}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send({
-        email: "escalation@c-cimas.org",
+        email: "invalidrole@c-cimas.org",
         password: "securePassword123",
-        fullName: "Privilege Escalation Attempt",
-        role: "SUPER_ADMIN",
+        fullName: "Test Person",
+        role: "MANAGER", // Disallowed role
       });
 
-    expect(res.status).toBe(403);
-    expect(res.body.message).toContain("Only Super Administrators");
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Validation Error");
   });
 });

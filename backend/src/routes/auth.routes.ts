@@ -8,8 +8,10 @@ const router = Router();
 router.post("/login", AuthController.login);
 router.post("/logout", AuthController.logout);
 
-// Protected session inspection
+// Protected session inspection & security
 router.get("/me", authenticateJWT, AuthController.me);
+router.put("/profile", authenticateJWT, AuthController.updateProfile);
+router.post("/change-password", authenticateJWT, AuthController.changePassword);
 
 export default router;
 

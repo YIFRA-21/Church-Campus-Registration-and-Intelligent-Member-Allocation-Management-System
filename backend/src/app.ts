@@ -4,6 +4,12 @@ import helmet from "helmet";
 import authRoutes from "./routes/auth.routes";
 import campusRoutes from "./routes/campus.routes";
 import userRoutes from "./routes/user.routes";
+import departmentRoutes from "./routes/department.routes";
+import memberRoutes from "./routes/member.routes";
+import importRoutes from "./routes/import.routes";
+import allocationRoutes from "./routes/allocation.routes";
+import evaluationRoutes from "./routes/evaluation.routes";
+import reportRoutes from "./routes/report.routes";
 
 export const app = express();
 
@@ -25,6 +31,12 @@ app.get("/health", (req: Request, res: Response) => {
 // Mount Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/campuses", campusRoutes);
+app.use("/api/v1/departments", departmentRoutes);
+app.use("/api/v1/members", memberRoutes);
+app.use("/api/v1/imports", importRoutes);
+app.use("/api/v1/allocations", allocationRoutes);
+app.use("/api/v1/evaluations", evaluationRoutes);
+app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/users", userRoutes);
 
 // Global Error Handler

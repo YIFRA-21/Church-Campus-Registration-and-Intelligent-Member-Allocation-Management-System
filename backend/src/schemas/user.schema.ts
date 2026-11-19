@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SystemRoleEnum } from "./auth.schema";
 
 export const CreateUserSchema = z.object({
   email: z.string().email("Valid email address required").toLowerCase().trim(),
@@ -6,14 +7,7 @@ export const CreateUserSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters").trim(),
   phoneNumber: z.string().optional(),
   campusId: z.string().uuid("Valid Campus UUID required").optional().nullable(),
-  role: z.enum([
-    "SUPER_ADMIN",
-    "CAMPUS_ADMIN",
-    "REGISTRATION_OFFICER",
-    "DEPT_MANAGER",
-    "EVALUATOR",
-    "VIEWER_AUDITOR",
-  ]),
+  role: SystemRoleEnum,
   customPermissions: z.array(z.string()).optional(),
 });
 
@@ -23,16 +17,7 @@ export const UpdateUserSchema = z.object({
   fullName: z.string().min(2).optional(),
   phoneNumber: z.string().optional(),
   campusId: z.string().uuid().optional().nullable(),
-  role: z
-    .enum([
-      "SUPER_ADMIN",
-      "CAMPUS_ADMIN",
-      "REGISTRATION_OFFICER",
-      "DEPT_MANAGER",
-      "EVALUATOR",
-      "VIEWER_AUDITOR",
-    ])
-    .optional(),
+  role: SystemRoleEnum.optional(),
   customPermissions: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
 });

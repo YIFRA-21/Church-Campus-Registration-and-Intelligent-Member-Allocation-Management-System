@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { CreateUserInput, UpdateUserInput } from "../schemas/user.schema";
-import { AuthSessionPayload } from "../schemas/auth.schema";
+import { AuthSessionPayload, SystemRole } from "../schemas/auth.schema";
+import { ADMIN_PERMISSIONS, EVALUATOR_PERMISSIONS } from "./auth.service";
 
 export interface UserRecord {
   id: string;
@@ -9,227 +10,83 @@ export interface UserRecord {
   phoneNumber?: string;
   campusId: string | null;
   campusName: string | null;
-  role: string;
+  role: SystemRole;
   permissions: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-const ROLES_CATALOG = [
+export const ROLES_CATALOG = [
   {
-    name: "SUPER_ADMIN",
-    title: "Super Administrator",
-    description: "Global system governance across all campuses",
-    permissions: [
-      "campus.manage",
-      "campus.view",
-      "user.manage",
-      "department.manage",
-      "department.view",
-      "member.register",
-      "member.import_excel",
-      "member.view_all",
-      "member.view_dept",
-      "allocation.configure",
-      "allocation.run",
-      "allocation.approve",
-      "member.reassign",
-      "member.assign_exception",
-      "reports.view",
-      "export.excel",
-      "audit.view",
-      "settings.manage",
-    ],
-  },
-  {
-    name: "CAMPUS_ADMIN",
-    title: "Campus Administrator",
-    description: "Full administrative operations over assigned campus",
-    permissions: [
-      "campus.view",
-      "user.manage",
-      "department.manage",
-      "department.view",
-      "member.register",
-      "member.import_excel",
-      "member.view_all",
-      "member.view_dept",
-      "allocation.configure",
-      "allocation.run",
-      "allocation.approve",
-      "member.reassign",
-      "member.assign_exception",
-      "reports.view",
-      "export.excel",
-      "audit.view",
-    ],
-  },
-  {
-    name: "REGISTRATION_OFFICER",
-    title: "Registration Officer",
-    description: "Member registration and Excel bulk imports",
-    permissions: [
-      "campus.view",
-      "member.register",
-      "member.import_excel",
-      "member.view_all",
-      "department.view",
-    ],
-  },
-  {
-    name: "DEPT_MANAGER",
-    title: "Department Manager",
-    description: "Restricted management exclusively to own assigned department",
-    permissions: [
-      "campus.view",
-      "department.view",
-      "member.view_dept",
-      "reports.view",
-      "export.excel",
-    ],
+    name: "ADMIN",
+    title: "System Administrator",
+    description: "Full administrative control over campuses, departments, members, allocation, evaluations, and reports",
+    permissions: ADMIN_PERMISSIONS,
   },
   {
     name: "EVALUATOR",
     title: "Evaluator",
-    description: "Monitoring, evaluation, and analytics reports review",
-    permissions: [
-      "campus.view",
-      "department.view",
-      "member.view_all",
-      "reports.view",
-      "export.excel",
-      "audit.view",
-    ],
-  },
-  {
-    name: "VIEWER_AUDITOR",
-    title: "Viewer / Auditor",
-    description: "Read-only access to audit logs and evaluation reports",
-    permissions: [
-      "campus.view",
-      "department.view",
-      "member.view_all",
-      "reports.view",
-      "audit.view",
-    ],
+    description: "Restricted access to assigned evaluation tasks, member assessments, scoring, drafts, and submissions",
+    permissions: EVALUATOR_PERMISSIONS,
   },
 ];
 
-let usersStore: UserRecord[] = [
+const INITIAL_USERS: UserRecord[] = [
   {
-    id: "u0000000-0000-0000-0000-000000000001",
+    id: "f0000000-0000-0000-0000-000000000001",
     email: "admin@c-cimas.org",
-    fullName: "Rev. Solomon Tadesse",
+    fullName: "Rev. Solomon Tadesse (Admin)",
     phoneNumber: "+251911000001",
-    campusId: null,
-    campusName: "Global Oversight (All Campuses)",
-    role: "SUPER_ADMIN",
-    permissions: ROLES_CATALOG.find((r) => r.name === "SUPER_ADMIN")!.permissions,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "u0000000-0000-0000-0000-000000000002",
-    email: "campusadmin@c-cimas.org",
-    fullName: "Daniel Bekele",
-    phoneNumber: "+251911000002",
     campusId: "a0000000-0000-0000-0000-000000000001",
     campusName: "Main Campus (Addis Ababa)",
-    role: "CAMPUS_ADMIN",
-    permissions: ROLES_CATALOG.find((r) => r.name === "CAMPUS_ADMIN")!.permissions,
+    role: "ADMIN",
+    permissions: ADMIN_PERMISSIONS,
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "u0000000-0000-0000-0000-000000000003",
-    email: "regofficer@c-cimas.org",
-    fullName: "Hanna Girma",
-    phoneNumber: "+251911000003",
-    campusId: "a0000000-0000-0000-0000-000000000001",
-    campusName: "Main Campus (Addis Ababa)",
-    role: "REGISTRATION_OFFICER",
-    permissions: ROLES_CATALOG.find((r) => r.name === "REGISTRATION_OFFICER")!.permissions,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "u0000000-0000-0000-0000-000000000004",
-    email: "choirlead@c-cimas.org",
-    fullName: "Yonas Alemu",
-    phoneNumber: "+251911000004",
-    campusId: "a0000000-0000-0000-0000-000000000001",
-    campusName: "Main Campus (Addis Ababa)",
-    role: "DEPT_MANAGER",
-    permissions: ROLES_CATALOG.find((r) => r.name === "DEPT_MANAGER")!.permissions,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "u0000000-0000-0000-0000-000000000005",
+    id: "f0000000-0000-0000-0000-000000000002",
     email: "evaluator@c-cimas.org",
-    fullName: "Dr. Aster Melaku",
+    fullName: "Dr. Aster Melaku (Evaluator)",
     phoneNumber: "+251911000005",
     campusId: "a0000000-0000-0000-0000-000000000001",
     campusName: "Main Campus (Addis Ababa)",
     role: "EVALUATOR",
-    permissions: ROLES_CATALOG.find((r) => r.name === "EVALUATOR")!.permissions,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "u0000000-0000-0000-0000-000000000006",
-    email: "auditor@c-cimas.org",
-    fullName: "Ato Michael Gebre",
-    phoneNumber: "+251911000006",
-    campusId: "a0000000-0000-0000-0000-000000000001",
-    campusName: "Main Campus (Addis Ababa)",
-    role: "VIEWER_AUDITOR",
-    permissions: ROLES_CATALOG.find((r) => r.name === "VIEWER_AUDITOR")!.permissions,
+    permissions: EVALUATOR_PERMISSIONS,
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
 ];
+
+let usersStore: UserRecord[] = [...INITIAL_USERS];
 
 export class UserService {
   static getRoles() {
     return ROLES_CATALOG;
   }
 
-  static async getAll(user: AuthSessionPayload): Promise<UserRecord[]> {
-    if (user.role === "SUPER_ADMIN") {
-      return usersStore;
+  static async getAll(currentUser: AuthSessionPayload): Promise<UserRecord[]> {
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Forbidden: Only Administrators can view user accounts");
     }
-    // Tenant Scoping: Campus Admin can only manage users in their assigned campus
-    return usersStore.filter((u) => u.campusId === user.campusId);
+    return usersStore;
   }
 
-  static async getById(id: string, user: AuthSessionPayload): Promise<UserRecord | null> {
-    const target = usersStore.find((u) => u.id === id);
-    if (!target) return null;
-
-    if (user.role !== "SUPER_ADMIN" && target.campusId !== user.campusId) {
-      throw new Error("Forbidden: User belongs to another campus organization");
+  static async getById(id: string, currentUser: AuthSessionPayload): Promise<UserRecord | null> {
+    if (currentUser.role !== "ADMIN" && currentUser.userId !== id) {
+      throw new Error("Forbidden: Access restricted to Administrators");
     }
 
-    return target;
+    const user = usersStore.find((u) => u.id === id);
+    return user || null;
   }
 
-  static async create(input: CreateUserInput, user: AuthSessionPayload): Promise<UserRecord> {
-    if (user.role !== "SUPER_ADMIN") {
-      // Campus Admin cannot create Super Admins or assign to another campus
-      if (input.role === "SUPER_ADMIN") {
-        throw new Error("Forbidden: Only Super Administrators can create Super Admin accounts");
-      }
-      if (input.campusId && input.campusId !== user.campusId) {
-        throw new Error("Forbidden: Cannot create a user assigned to another campus organization");
-      }
+  static async create(input: CreateUserInput, currentUser: AuthSessionPayload): Promise<UserRecord> {
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Forbidden: Only Administrators can create accounts");
     }
 
     const emailExists = usersStore.some((u) => u.email.toLowerCase() === input.email.toLowerCase());
@@ -237,21 +94,20 @@ export class UserService {
       throw new Error(`Email "${input.email}" is already registered`);
     }
 
-    const effectiveCampusId = user.role === "SUPER_ADMIN" ? input.campusId || null : user.campusId;
-    const roleDef = ROLES_CATALOG.find((r) => r.name === input.role);
-    const basePermissions = roleDef ? roleDef.permissions : [];
-    const customPerms = input.customPermissions || [];
-    const mergedPermissions = Array.from(new Set([...basePermissions, ...customPerms]));
+    const roleConfig = ROLES_CATALOG.find((r) => r.name === input.role);
+    const assignedPermissions = input.customPermissions && input.customPermissions.length > 0
+      ? input.customPermissions
+      : roleConfig?.permissions || [];
 
     const newUser: UserRecord = {
-      id: `u0000000-0000-0000-0000-${(usersStore.length + 1).toString().padStart(12, "0")}`,
+      id: `f0000000-0000-0000-0000-${(usersStore.length + 1).toString().padStart(12, "0")}`,
       email: input.email.toLowerCase(),
       fullName: input.fullName,
       phoneNumber: input.phoneNumber || "",
-      campusId: effectiveCampusId,
-      campusName: effectiveCampusId ? "Assigned Campus" : "Global Oversight",
+      campusId: input.campusId || null,
+      campusName: input.campusId ? "Assigned Campus" : "Global Oversight",
       role: input.role,
-      permissions: mergedPermissions,
+      permissions: assignedPermissions,
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -264,53 +120,57 @@ export class UserService {
   static async update(
     id: string,
     input: UpdateUserInput,
-    user: AuthSessionPayload
+    currentUser: AuthSessionPayload
   ): Promise<UserRecord> {
-    const target = await this.getById(id, user);
-    if (!target) {
-      throw new Error("User not found");
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Forbidden: Only Administrators can update accounts");
     }
 
-    if (user.role !== "SUPER_ADMIN") {
-      if (input.role === "SUPER_ADMIN") {
-        throw new Error("Forbidden: Cannot elevate user to Super Admin");
-      }
-      if (input.campusId && input.campusId !== user.campusId) {
-        throw new Error("Forbidden: Cannot reassign user to another campus");
-      }
+    const userIndex = usersStore.findIndex((u) => u.id === id);
+    if (userIndex === -1) {
+      throw new Error("User account not found");
     }
 
-    if (input.fullName !== undefined) target.fullName = input.fullName;
-    if (input.phoneNumber !== undefined) target.phoneNumber = input.phoneNumber;
-    if (input.isActive !== undefined) target.isActive = input.isActive;
-    if (input.campusId !== undefined && user.role === "SUPER_ADMIN") {
-      target.campusId = input.campusId;
-    }
-    if (input.role !== undefined) {
-      target.role = input.role;
-      const roleDef = ROLES_CATALOG.find((r) => r.name === input.role);
-      target.permissions = roleDef ? roleDef.permissions : target.permissions;
-    }
-    if (input.customPermissions !== undefined) {
-      target.permissions = Array.from(new Set([...target.permissions, ...input.customPermissions]));
-    }
-    target.updatedAt = new Date().toISOString();
+    const existing = usersStore[userIndex];
+    let updatedPermissions = existing.permissions;
 
-    return target;
+    if (input.role && input.role !== existing.role) {
+      const roleConfig = ROLES_CATALOG.find((r) => r.name === input.role);
+      updatedPermissions = input.customPermissions || roleConfig?.permissions || [];
+    } else if (input.customPermissions) {
+      updatedPermissions = input.customPermissions;
+    }
+
+    const updatedUser: UserRecord = {
+      ...existing,
+      fullName: input.fullName ?? existing.fullName,
+      phoneNumber: input.phoneNumber ?? existing.phoneNumber,
+      campusId: input.campusId !== undefined ? input.campusId : existing.campusId,
+      role: input.role ?? existing.role,
+      permissions: updatedPermissions,
+      isActive: input.isActive !== undefined ? input.isActive : existing.isActive,
+      updatedAt: new Date().toISOString(),
+    };
+
+    usersStore[userIndex] = updatedUser;
+    return updatedUser;
   }
 
-  static async delete(id: string, user: AuthSessionPayload): Promise<boolean> {
-    const target = await this.getById(id, user);
-    if (!target) {
-      throw new Error("User not found");
+  static async delete(id: string, currentUser: AuthSessionPayload): Promise<boolean> {
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Forbidden: Only Administrators can remove accounts");
     }
 
-    if (target.id === user.userId) {
-      throw new Error("Cannot delete your own active administrative account");
+    if (id === currentUser.userId) {
+      throw new Error("Cannot delete your own administrator account");
     }
 
-    const initialLength = usersStore.length;
-    usersStore = usersStore.filter((u) => u.id !== id);
-    return usersStore.length < initialLength;
+    const userIndex = usersStore.findIndex((u) => u.id === id);
+    if (userIndex === -1) {
+      throw new Error("User account not found");
+    }
+
+    usersStore.splice(userIndex, 1);
+    return true;
   }
 }

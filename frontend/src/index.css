@@ -6,5 +6,251 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Ethiopic", sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* ========================================================================= */
+/* UNIFIED WHITE PAGE MODE (LIGHT) - Clean crisp white enterprise styling   */
+/* ========================================================================= */
+html:not(.dark) body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* ========================================================================= */
+/* UNIFIED BLACK PAGE MODE (DARK) - Matching Reference Project Color Accuracy */
+/* Source: D:\Visitor-Managenment-System-Internship--main\...\Frontend       */
+/* Canvas Background: #070b13 (Deep Midnight Obsidian)                       */
+/* Cards & Surfaces: #0b1220                                                 */
+/* Border: #1e293b (Slate-800 / rgba(148, 163, 184, 0.18))                   */
+/* Header Navbar: #0c121e                                                    */
+/* Sidebar: linear-gradient(180deg, #090d16 0%, #0f172a 40%, #1e1b4b 100%)    */
+/* Big KPI Numbers: #ffffff font-black                                       */
+/* Subtitles & Labels: #94a3b8 / #cbd5e1                                     */
+/* ========================================================================= */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #070b13 !important;
+  color: #f8fafc !important;
+}
+
+/* Main page container & wrapper backgrounds */
+html.dark .bg-slate-100,
+html.dark .bg-slate-50 {
+  background-color: #070b13 !important;
+  color: #f8fafc !important;
+}
+
+/* All Cards, Panels, Modals, and Elevated Surfaces in Dark Mode */
+html.dark .bg-white {
+  background-color: #0b1220 !important;
+  color: #f8fafc !important;
+  border-color: #1e293b !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Borders across all cards and sections */
+html.dark .border-slate-200,
+html.dark .border-slate-100,
+html.dark .border-slate-300 {
+  border-color: #1e293b !important;
+}
+
+/* Dark mode text colors */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Form Controls: Inputs, Selects, and Textareas */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #070b13 !important;
+  color: #f8fafc !important;
+  border-color: #1e293b !important;
+}
+
+html.dark select option {
+  background-color: #0b1220 !important;
+  color: #f8fafc !important;
+}
+
+/* Tables in Dark Mode */
+html.dark table {
+  border-color: #1e293b !important;
+}
+
+html.dark th {
+  background-color: #0e1626 !important;
+  color: #94a3b8 !important;
+  border-color: #1e293b !important;
+}
+
+html.dark td {
+  border-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark tr:hover td {
+  background-color: #131c2e !important;
+}
+
+/* Card Big Metric Numbers */
+html.dark .text-3xl.font-black {
+  color: #ffffff !important;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Card Uppercase Category Labels */
+html.dark .text-\[10px\].font-bold.uppercase {
+  color: #94a3b8 !important;
+}
+
+/* Vibrant Glowing Subtitles for Dark Mode matching Reference Project */
+html.dark .text-blue-800,
+html.dark .text-blue-900,
+html.dark .text-blue-700 {
+  color: #38bdf8 !important;
+}
+
+html.dark .text-emerald-800,
+html.dark .text-emerald-900,
+html.dark .text-emerald-700 {
+  color: #34d399 !important;
+}
+
+html.dark .text-indigo-800,
+html.dark .text-indigo-900,
+html.dark .text-indigo-700 {
+  color: #818cf8 !important;
+}
+
+html.dark .text-purple-800,
+html.dark .text-purple-900,
+html.dark .text-purple-700 {
+  color: #c084fc !important;
+}
+
+html.dark .text-amber-800,
+html.dark .text-amber-900,
+html.dark .text-amber-700 {
+  color: #fbbf24 !important;
+}
+
+html.dark .text-sky-800,
+html.dark .text-sky-900,
+html.dark .text-sky-700 {
+  color: #38bdf8 !important;
+}
+
+html.dark .text-cyan-800,
+html.dark .text-cyan-900,
+html.dark .text-cyan-700 {
+  color: #22d3ee !important;
+}
+
+html.dark .text-violet-800,
+html.dark .text-violet-900,
+html.dark .text-violet-700 {
+  color: #a78bfa !important;
+}
+
+html.dark .text-teal-800,
+html.dark .text-teal-900,
+html.dark .text-teal-700 {
+  color: #2dd4bf !important;
+}
+
+html.dark .text-rose-700,
+html.dark .text-rose-800 {
+  color: #fb7185 !important;
+}
+
+/* Tinted KPI & Metric Badge Backgrounds in Dark Mode */
+html.dark .bg-teal-50,
+html.dark .bg-teal-100 {
+  background-color: rgba(45, 212, 191, 0.15) !important;
+  color: #2dd4bf !important;
+  border-color: rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark .bg-sky-50,
+html.dark .bg-sky-100,
+html.dark .bg-blue-50,
+html.dark .bg-blue-100 {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-100 {
+  background-color: rgba(251, 191, 36, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.25) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-100 {
+  background-color: rgba(52, 211, 153, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-100 {
+  background-color: rgba(251, 113, 133, 0.15) !important;
+  color: #fb7185 !important;
+  border-color: rgba(251, 113, 133, 0.25) !important;
+}
+
+html.dark .bg-purple-50,
+html.dark .bg-purple-100,
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-100,
+html.dark .bg-violet-50,
+html.dark .bg-violet-100 {
+  background-color: rgba(192, 132, 252, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(192, 132, 252, 0.25) !important;
+}
+
+html.dark .bg-cyan-50,
+html.dark .bg-cyan-100 {
+  background-color: rgba(34, 211, 238, 0.15) !important;
+  color: #22d3ee !important;
+  border-color: rgba(34, 211, 238, 0.25) !important;
+}
+
+/* Primary buttons & system banners */
+.cimas-btn-primary {
+  background: linear-gradient(135deg, #090d16 0%, #1e3a8a 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.45) !important;
+}
+
+.cimas-btn-primary:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+}
+
+.cimas-hero-banner {
+  background: linear-gradient(135deg, #0d1527 0%, #111a33 50%, #0a1020 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 20px 25px -5px rgba(2, 6, 23, 0.55) !important;
+}
+
+.cimas-login-bg {
+  background: radial-gradient(ellipse at 50% 15%, #1e293b 0%, #0f172a 45%, #070b13 100%) !important;
+}
