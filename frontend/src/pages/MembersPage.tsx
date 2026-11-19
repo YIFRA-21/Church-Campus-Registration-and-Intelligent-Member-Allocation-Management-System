@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchCampuses } from "../api/campus.api";
 import {
@@ -8,13 +8,17 @@ import {
   deleteMember,
   batchUpdateMemberStatus,
   batchDeleteMembers,
-  fetchMemberStats,
+  fetchMemberDashboardSummary,
+  changeMemberStatus,
+  fetchMemberHistory,
+  archiveMember,
 } from "../api/member.api";
 import { Campus } from "../types/campus";
 import {
   Member,
   CreateMemberPayload,
-  MemberStats,
+  MemberStatusHistory,
+  MemberDashboardSummary,
   Gender,
   MemberCategory,
   SpiritualStatus,
@@ -22,42 +26,91 @@ import {
 } from "../types/member";
 import {
   Users,
+  UserPlus,
   Search,
+  Filter,
   CheckCircle2,
   Clock,
   Shield,
   Phone,
-  ChevronLeft,
-  ChevronRight,
-  UserPlus,
-  Building2,
-  X,
-  Eye,
-  FileSpreadsheet,
-  Edit,
-  Trash2,
-  Lock,
-  CheckSquare,
-  Square,
-  AlertTriangle,
-  AlertCircle,
+  Mail,
   MapPin,
   Church,
   GraduationCap,
   Sparkles,
   Download,
+  RefreshCw,
+  AlertTriangle,
+  AlertCircle,
+  X,
+  Eye,
+  Edit3,
+  Trash2,
+  Archive,
+  ChevronLeft,
+  ChevronRight,
+  CheckSquare,
+  Square,
+  Activity,
+  FileText,
+  Layers,
+  Award,
+  History,
+  UserCheck,
+  UserX,
+  Building2,
+  BarChart3,
+  PieChart as PieChartIcon,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+
+const ETHIOPIAN_REGIONS = [
+  "አዲስ አበባ",
+  "ኦሮሚያ",
+  "አማራ",
+  "ትግራይ",
+  "ደቡብ ኢትዮጵያ",
+  "ሲዳማ",
+  "ሶማሌ",
+  "አፋር",
+  "ቤንሻንጉል ጉሙዝ",
+  "ጋምቤላ",
+  "ሐረሪ",
+  "ድሬዳዋ",
+];
+
+const ETHIOPIAN_LANGUAGES = [
+  "አማርኛ",
+  "Afaan Oromoo",
+  "ትግርኛ",
+  "Somali",
+  "Sidama",
+  "Wolaytta",
+  "English",
+];
+
+const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#6366F1"];
 
 export const MembersPage: React.FC = () => {
-  const { token, hasPermission } = useAuth();
+  const { token, hasPermission, user } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [selectedCampusId, setSelectedCampusId] = useState<string>("");
   const [members, setMembers] = useState<Member[]>([]);
-  const [stats, setStats] = useState<MemberStats | null>(null);
+  const [summary, setSummary] = useState<MemberDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
-  // Filters
+  // Filters & Pagination
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
@@ -67,20 +120,23 @@ export const MembersPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Row Selection State
+  // Multi-selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Modals State
+  // Modals & Drawers
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null); // For Detail Drawer
+  const [editingMember, setEditingMember] = useState<Member | null>(null); // For Edit Modal
+  const [statusTargetMember, setStatusTargetMember] = useState<Member | null>(null); // For Status Transition Modal
+  const [historyTargetMember, setHistoryTargetMember] = useState<Member | null>(null); // For Audit Modal
+  const [historyList, setHistoryList] = useState<MemberStatusHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
   const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
 
-  // Form State
+  // Form State for Registration
   const [formData, setFormData] = useState<CreateMemberPayload>({
     campusId: "",
-    memberId: "",
     firstName: "",
     lastName: "",
     christianName: "",
@@ -107,279 +163,100 @@ export const MembersPage: React.FC = () => {
     status: "ACTIVE",
   });
 
+  // Edit Form State
   const [editFormData, setEditFormData] = useState<Partial<CreateMemberPayload>>({});
+
+  // Status Change State (Rule 9)
+  const [targetStatus, setTargetStatus] = useState<MemberStatus>("ACTIVE");
+  const [statusReason, setStatusReason] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Load campuses
+  // Load Campuses
   useEffect(() => {
-    async function init() {
+    async function loadCampuses() {
       if (!token) return;
       try {
         const cList = await fetchCampuses(token);
         setCampuses(cList);
-        if (cList.length > 0) {
+        if (cList.length > 0 && !selectedCampusId) {
           setSelectedCampusId(cList[0].id);
+          setFormData((prev) => ({ ...prev, campusId: cList[0].id }));
         }
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Error loading campuses");
+      } catch (err: any) {
+        console.error("Failed to load campuses:", err);
       }
     }
-    init();
+    loadCampuses();
   }, [token]);
 
-  // Load members and stats
-  const loadData = async () => {
+  // Load Executive Dashboard Summary
+  const loadSummary = useCallback(async () => {
+    if (!token) return;
+    setSummaryLoading(true);
+    try {
+      const data = await fetchMemberDashboardSummary(token, selectedCampusId || undefined);
+      setSummary(data);
+    } catch (err: any) {
+      console.error("Failed to load dashboard summary:", err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [token, selectedCampusId]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  // Load Members List
+  const loadMembers = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const [membersData, statsData] = await Promise.all([
-        fetchMembers(token, {
-          campusId: selectedCampusId || undefined,
-          search: search || undefined,
-          gender: (genderFilter as Gender) || undefined,
-          category: (categoryFilter as MemberCategory) || undefined,
-          spiritualStatus: (spiritualFilter as SpiritualStatus) || undefined,
-          status: (statusFilter as MemberStatus) || undefined,
-          page,
-          limit: 15,
-        }),
-        fetchMemberStats(token, selectedCampusId || undefined),
-      ]);
-
-      setMembers(membersData.members);
-      setTotalPages(membersData.pagination.totalPages);
-      setTotalCount(membersData.pagination.total);
-      setStats(statsData);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error loading member records");
+      const res = await fetchMembers(token, {
+        campusId: selectedCampusId || undefined,
+        search: search.trim() || undefined,
+        gender: (genderFilter as Gender) || undefined,
+        category: (categoryFilter as MemberCategory) || undefined,
+        spiritualStatus: (spiritualFilter as SpiritualStatus) || undefined,
+        status: (statusFilter as MemberStatus) || undefined,
+        page,
+        limit: 10,
+      });
+      setMembers(res.members);
+      setTotalPages(res.pagination.totalPages);
+      setTotalCount(res.pagination.total);
+    } catch (err: any) {
+      setError(err.message || "Failed to load members directory");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, selectedCampusId, search, genderFilter, categoryFilter, spiritualFilter, statusFilter, page]);
 
   useEffect(() => {
-    loadData();
-  }, [
-    token,
-    selectedCampusId,
-    search,
-    genderFilter,
-    categoryFilter,
-    spiritualFilter,
-    statusFilter,
-    page,
-  ]);
+    loadMembers();
+  }, [loadMembers]);
 
-  // Selection Handlers
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedIds(members.map((m) => m.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectRow = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const isAllSelected = members.length > 0 && selectedIds.length === members.length;
-
-  // Batch Status Change Handler
-  const handleBatchStatus = async (status: MemberStatus) => {
-    if (!token || selectedIds.length === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await batchUpdateMemberStatus(selectedIds, status, token);
-      setSuccessMsg(`Successfully updated status to "${status}" for ${selectedIds.length} members.`);
-      setSelectedIds([]);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update member status in batch");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Batch Delete Handler
-  const handleBatchDelete = async () => {
-    if (!token || selectedIds.length === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await batchDeleteMembers(selectedIds, token);
-      setSuccessMsg(`Successfully deleted ${selectedIds.length} selected members.`);
-      setSelectedIds([]);
-      setShowBatchDeleteModal(false);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to delete selected members");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Single Delete Handler
-  const handleDeleteSingle = async () => {
-    if (!token || !deletingMember) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await deleteMember(deletingMember.id, token);
-      setSuccessMsg(`Member "${deletingMember.fullName}" successfully removed.`);
-      setDeletingMember(null);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to delete member");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Open Edit Form
-  const handleOpenEdit = (m: Member) => {
-    setEditingMember(m);
-    setEditFormData({
-      memberId: m.memberId,
-      firstName: m.firstName,
-      lastName: m.lastName,
-      christianName: m.christianName || "",
-      gender: m.gender,
-      phoneNumber: m.phoneNumber,
-      email: m.email,
-      academicDepartment: m.academicDepartment || "",
-      originRegion: m.originRegion || "",
-      zone: m.zone || "",
-      woreda: m.woreda || "",
-      kebele: m.kebele || "",
-      dormBlock: m.dormBlock || "",
-      dormRoom: m.dormRoom || "",
-      language: m.language || "",
-      emergencyContactName: m.emergencyContactName || "",
-      emergencyContactPhone: m.emergencyContactPhone || "",
-      sundaySchoolDuration: m.sundaySchoolDuration || "",
-      age: m.age || 20,
-      category: m.category,
-      spiritualStatus: m.spiritualStatus,
-      educationLevel: m.educationLevel || "",
-      address: m.address || "",
-      status: m.status,
-    });
-  };
-
-  // Submit Edit Form
-  const handleUpdate = async (e: React.FormEvent) => {
+  // Handle Create Member
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !editingMember) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await updateMember(editingMember.id, editFormData, token);
-      setSuccessMsg(`Member "${editingMember.fullName}" updated successfully.`);
-      setEditingMember(null);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update member");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Single Quick Toggle Suspend
-  const handleToggleSuspend = async (m: Member) => {
     if (!token) return;
-    const newStatus: MemberStatus = m.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED";
-    try {
-      await updateMember(m.id, { status: newStatus }, token);
-      setSuccessMsg(`Member status set to "${newStatus}".`);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to toggle status");
-    }
-  };
-
-  // Export Selected Members to CSV
-  const handleExportSelected = () => {
-    const listToExport =
-      selectedIds.length > 0
-        ? members.filter((m) => selectedIds.includes(m.id))
-        : members;
-
-    const headers = [
-      "ተ.ቁ",
-      "ሙሉ ስም",
-      "ክርስትና ስም",
-      "ጾታ",
-      "ስልክ ቁጥር",
-      "ዲፓርትመንት",
-      "የመጡበት ክልል",
-      "ዞን",
-      "ወረዳ",
-      "ቀበሌ",
-      "ብሎክ",
-      "ዶርም",
-      "ቋንቋ",
-      "የተጠሪ ስም",
-      "የተጠሪ ስልክ",
-      "የሰንበት ት/ቤት ቆይታ",
-      "ዕድሜ",
-      "ሁኔታ",
-    ];
-
-    const rows = listToExport.map((m) => [
-      m.memberId,
-      m.fullName,
-      m.christianName || "—",
-      m.gender,
-      m.phoneNumber,
-      m.academicDepartment || "—",
-      m.originRegion || "—",
-      m.zone || "—",
-      m.woreda || "—",
-      m.kebele || "—",
-      m.dormBlock || "—",
-      m.dormRoom || "—",
-      m.language || "—",
-      m.emergencyContactName || "—",
-      m.emergencyContactPhone || "—",
-      m.sundaySchoolDuration || "—",
-      m.age || "—",
-      m.status,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `C-CIMAS-Members-Roster-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setSuccessMsg(`Exported ${listToExport.length} members to CSV roster.`);
-  };
-
-  // Handle Create Member Submit
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token || !selectedCampusId) return;
     setSubmitting(true);
     setError(null);
-
     try {
-      await createMember({ ...formData, campusId: selectedCampusId }, token);
+      const payload: CreateMemberPayload = {
+        ...formData,
+        campusId: selectedCampusId || formData.campusId,
+      };
+      await createMember(payload, token);
+      setSuccessMsg("Member registered successfully with auto-generated code!");
       setShowCreateModal(false);
+      // Reset form
       setFormData({
-        campusId: selectedCampusId,
-        memberId: "",
+        campusId: selectedCampusId || "",
         firstName: "",
         lastName: "",
         christianName: "",
@@ -405,981 +282,1431 @@ export const MembersPage: React.FC = () => {
         emergencyContact: "",
         status: "ACTIVE",
       });
-      setSuccessMsg("Member successfully registered with complete official profile.");
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Failed to register member");
     } finally {
       setSubmitting(false);
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>የግቢ ጉባኤ አባላት ዝርዝር ማውጫ</span>
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900">
-              C-CIMAS Registry
-            </span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Church Campus Registration, Demographics, Academic and Spiritual Records Master Table.
-          </p>
-        </div>
+  // Open Edit Modal
+  const openEditModal = (member: Member) => {
+    setEditingMember(member);
+    setEditFormData({
+      firstName: member.firstName,
+      lastName: member.lastName,
+      christianName: member.christianName || "",
+      gender: member.gender,
+      phoneNumber: member.phoneNumber || "",
+      email: member.email || "",
+      academicDepartment: member.academicDepartment || "",
+      originRegion: member.originRegion || "አዲስ አበባ",
+      zone: member.zone || "",
+      woreda: member.woreda || "",
+      kebele: member.kebele || "",
+      dormBlock: member.dormBlock || "",
+      dormRoom: member.dormRoom || "",
+      language: member.language || "አማርኛ",
+      emergencyContactName: member.emergencyContactName || "",
+      emergencyContactPhone: member.emergencyContactPhone || "",
+      sundaySchoolDuration: member.sundaySchoolDuration || "3 ዓመት",
+      age: member.age || 21,
+      category: member.category,
+      spiritualStatus: member.spiritualStatus,
+      educationLevel: member.educationLevel,
+      address: member.address || "",
+    });
+  };
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Campus Selector */}
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs">
-            <Building2 className="w-4 h-4 text-blue-900" />
-            <select
-              value={selectedCampusId}
-              onChange={(e) => {
-                setSelectedCampusId(e.target.value);
-                setPage(1);
-              }}
-              className="font-bold text-blue-900 bg-transparent focus:outline-none cursor-pointer"
-            >
-              <option value="">All Campuses (ሁሉም ግቢዎች)</option>
-              {campuses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+  // Handle Update Member (Rule 6: Member Code Immutable)
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !editingMember) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updateMember(editingMember.id, editFormData, token);
+      setSuccessMsg(`Member ${editingMember.memberId} updated successfully!`);
+      setEditingMember(null);
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Failed to update member");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-          <button
-            type="button"
-            onClick={handleExportSelected}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm flex items-center gap-1.5 transition"
-            title="Export CSV"
-          >
-            <Download className="w-4 h-4 text-blue-900" />
-            <span>Export Roster</span>
-          </button>
+  // Open Status Transition Modal (Rule 9)
+  const openStatusModal = (member: Member) => {
+    setStatusTargetMember(member);
+    setTargetStatus(member.status);
+    setStatusReason("");
+  };
 
-          <Link
-            to="/import"
-            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs border border-slate-200 flex items-center gap-1.5 transition"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-            <span>Excel Bulk Import</span>
-          </Link>
+  // Handle Status Transition with Mandatory Reason
+  const handleStatusSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !statusTargetMember) return;
+    if (!statusReason.trim()) {
+      setError("Official justification reason is required for status transition.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await changeMemberStatus(statusTargetMember.id, targetStatus, statusReason.trim(), token);
+      setSuccessMsg(`Member status transitioned to ${targetStatus}!`);
+      setStatusTargetMember(null);
+      setStatusReason("");
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Failed to change member status");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-          {hasPermission("member.register") && (
-            <button
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  campusId: selectedCampusId || campuses[0]?.id || "",
-                }));
-                setShowCreateModal(true);
-              }}
-              className="px-4 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-semibold text-xs shadow-md shadow-blue-900/30 flex items-center gap-2 transition shrink-0"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>አዲስ አባል መዝግብ (Register)</span>
-            </button>
-          )}
-        </div>
-      </div>
+  // Open Audit History Modal
+  const openHistoryModal = async (member: Member) => {
+    if (!token) return;
+    setHistoryTargetMember(member);
+    setHistoryLoading(true);
+    try {
+      const history = await fetchMemberHistory(member.id, token);
+      setHistoryList(history);
+    } catch (err: any) {
+      console.error("Failed to load member history:", err);
+      setHistoryList([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
-      {error && (
-        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button onClick={() => setError(null)} className="text-rose-500 hover:text-rose-800">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+  // Handle Single Soft Delete / Archive
+  const handleDeleteConfirm = async () => {
+    if (!token || !deletingMember) return;
+    setSubmitting(true);
+    try {
+      await deleteMember(deletingMember.id, token);
+      setSuccessMsg(`Member ${deletingMember.memberId} archived successfully.`);
+      setDeletingMember(null);
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete member");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-      {successMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {successMsg}
+  // Handle Batch Status Update
+  const handleBatchStatus = async (status: MemberStatus) => {
+    if (!token || selectedIds.length === 0) return;
+    try {
+      await batchUpdateMemberStatus(selectedIds, status, token);
+      setSuccessMsg(`Updated status for ${selectedIds.length} members to ${status}!`);
+      setSelectedIds([]);
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Batch status update failed");
+    }
+  };
+
+  // Handle Batch Delete
+  const handleBatchDeleteConfirm = async () => {
+    if (!token || selectedIds.length === 0) return;
+    setSubmitting(true);
+    try {
+      await batchDeleteMembers(selectedIds, token);
+      setSuccessMsg(`Archived ${selectedIds.length} selected members.`);
+      setSelectedIds([]);
+      setShowBatchDeleteModal(false);
+      loadMembers();
+      loadSummary();
+    } catch (err: any) {
+      setError(err.message || "Batch deletion failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Selection toggle
+  const toggleSelectAll = () => {
+    if (selectedIds.length === members.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(members.map((m) => m.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // CSV Export
+  const handleExportCSV = () => {
+    if (members.length === 0) return;
+    const headers = [
+      "Member ID",
+      "Full Name",
+      "Christian Name",
+      "Gender",
+      "Status",
+      "Phone",
+      "Email",
+      "Academic Department",
+      "Category",
+      "Spiritual Status",
+      "Origin Region",
+      "Dorm Room",
+    ];
+    const rows = members.map((m) => [
+      m.memberId,
+      `"${m.fullName}"`,
+      `"${m.christianName || ""}"`,
+      m.gender,
+      m.status,
+      m.phoneNumber || "",
+      m.email || "",
+      `"${m.academicDepartment || ""}"`,
+      m.category,
+      m.spiritualStatus,
+      `"${m.originRegion || ""}"`,
+      `"${m.dormRoom || ""}"`,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `CCIMAS_Members_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Status Badge Helper
+  const getStatusBadge = (status: MemberStatus) => {
+    switch (status) {
+      case "ACTIVE":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            ACTIVE
           </span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-800">
-            <X className="w-4 h-4" />
-          </button>
+        );
+      case "INACTIVE":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            INACTIVE
+          </span>
+        );
+      case "SUSPENDED":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            SUSPENDED
+          </span>
+        );
+      case "ON_HOLD":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+            ON HOLD
+          </span>
+        );
+      case "ARCHIVED":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            ARCHIVED
+          </span>
+        );
+      default:
+        return <span className="text-xs text-gray-500">{status}</span>;
+    }
+  };
+
+  // Category Pie Data for Recharts
+  const categoryPieData = useMemo(() => {
+    if (!summary?.categoryDistribution) return [];
+    return Object.entries(summary.categoryDistribution).map(([name, value], idx) => ({
+      name,
+      value,
+      color: CHART_COLORS[idx % CHART_COLORS.length],
+    }));
+  }, [summary]);
+
+  // Gender Bar Data for Recharts
+  const genderBarData = useMemo(() => {
+    if (!summary?.genderDistribution) return [];
+    return summary.genderDistribution.map((item) => ({
+      name: item.gender,
+      count: item.count,
+    }));
+  }, [summary]);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-16">
+      {/* 1. CANVA-INSPIRED EXECUTIVE HERO BANNER */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white shadow-xl">
+        {/* Dual wave SVG overlay */}
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <svg className="w-full h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <path
+              fill="#ffffff"
+              d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,133.3C672,139,768,181,864,186.7C960,192,1056,160,1152,149.3C1248,139,1344,149,1392,154.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,964,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
         </div>
-      )}
 
-      {/* Statistics Banner */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Total Registered</span>
-            <div className="text-2xl font-bold text-slate-900 mt-0.5">{stats.total}</div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              {stats.male} ወንድ · {stats.female} ሴት
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  Module 3: Enterprise Member Management
+                </span>
+                <span className="text-xs text-indigo-200/80">C-CIMAS Orthodox Core</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                <Users className="w-9 h-9 text-indigo-400" />
+                Member CRM & Fellowship Directory
+              </h1>
+              <p className="mt-2 text-indigo-200 text-sm sm:text-base max-w-2xl leading-relaxed">
+                Centralized registry enforcing single-campus membership, concurrency-safe member code
+                generation (<span className="text-amber-300 font-mono">MEM-YYYY-XXXX</span>), status audit trails, and Ethiopian Orthodox fellowship criteria.
+              </p>
+            </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Active (ንቁ)</span>
-            <div className="text-2xl font-bold text-emerald-700 mt-0.5">{stats.active}</div>
-            <p className="text-[11px] text-emerald-600 mt-1">Eligible for allocation cycle</p>
-          </div>
+            {/* Quick Actions & Campus Filter */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Campus Selector */}
+              <div className="relative">
+                <select
+                  value={selectedCampusId}
+                  onChange={(e) => {
+                    setSelectedCampusId(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-400 focus:outline-none backdrop-blur-md"
+                >
+                  <option value="" className="text-slate-900">
+                    All Campuses (Enterprise View)
+                  </option>
+                  {campuses.map((c) => (
+                    <option key={c.id} value={c.id} className="text-slate-900">
+                      {c.name} ({c.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Ordained Deacons (ዲያቆናት)</span>
-            <div className="text-2xl font-bold text-blue-900 mt-0.5">{stats.deacons}</div>
-            <p className="text-[11px] text-blue-700 mt-1">Altar and liturgical ministry</p>
-          </div>
+              {/* Export CSV */}
+              <button
+                onClick={handleExportCSV}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-sm font-medium transition shadow-sm backdrop-blur-md"
+                title="Export filtered records to CSV"
+              >
+                <Download className="w-4 h-4 text-emerald-300" />
+                Export
+              </button>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Allocated to Ministries</span>
-            <div className="text-2xl font-bold text-indigo-700 mt-0.5">{stats.allocated}</div>
-            <p className="text-[11px] text-indigo-600 mt-1">Assigned across departments</p>
-          </div>
-        </div>
-      )}
+              {/* Refresh */}
+              <button
+                onClick={() => {
+                  loadMembers();
+                  loadSummary();
+                }}
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition backdrop-blur-md"
+                title="Refresh Directory"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              </button>
 
-      {/* Search and Filters Bar with Status Pills */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-          <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by name, baptismal name (ክርስትና ስም), ID, phone, region..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
-            />
-          </div>
-
-          {/* Status Filter Pills */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold self-stretch md:self-auto overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("");
-                setPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg transition shrink-0 ${
-                statusFilter === ""
-                  ? "bg-white text-blue-900 shadow-sm font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              All Statuses (ሁሉም)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("ACTIVE");
-                setPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
-                statusFilter === "ACTIVE"
-                  ? "bg-white text-emerald-800 shadow-sm font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Active (ንቁ)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("INACTIVE");
-                setPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
-                statusFilter === "INACTIVE"
-                  ? "bg-white text-slate-800 shadow-sm font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>Inactive (ቦዘኔ)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("SUSPENDED");
-                setPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg transition shrink-0 flex items-center gap-1.5 ${
-                statusFilter === "SUSPENDED"
-                  ? "bg-white text-amber-800 shadow-sm font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span>Suspended (የታገደ)</span>
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            {/* Gender Filter */}
-            <select
-              value={genderFilter}
-              onChange={(e) => {
-                setGenderFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 rounded-xl border border-slate-200 font-medium bg-slate-50 focus:outline-none"
-            >
-              <option value="">All Genders (ጾታ)</option>
-              <option value="MALE">ወንድ (Male)</option>
-              <option value="FEMALE">ሴት (Female)</option>
-            </select>
-
-            {/* Spiritual Status Filter */}
-            <select
-              value={spiritualFilter}
-              onChange={(e) => {
-                setSpiritualFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 rounded-xl border border-slate-200 font-medium bg-slate-50 focus:outline-none"
-            >
-              <option value="">All Spiritual Roles (መንፈሳዊ)</option>
-              <option value="DEACON">ዲያቆን (Deacon)</option>
-              <option value="SERVANT">አገልጋይ (Servant)</option>
-              <option value="REGULAR">ምዕመን (Regular)</option>
-            </select>
+              {/* New Member Registration Button */}
+              {hasPermission("members:write") && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Register Member
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Floating Batch Action Bar When Rows are Selected */}
-      {selectedIds.length > 0 && (
-        <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-mono font-bold text-xs shadow-sm">
-              {selectedIds.length} ተመርጠዋል ({selectedIds.length} Selected)
-            </span>
-            <span className="text-xs text-slate-300 hidden sm:inline">
-              ፈጣን የጅምላ እርምጃዎችን ይተግብሩ (Apply batch operations)
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Mark Active */}
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => handleBatchStatus("ACTIVE")}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>ንቁ አድርግ (Active)</span>
-            </button>
-
-            {/* Mark Inactive */}
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => handleBatchStatus("INACTIVE")}
-              className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition disabled:opacity-50"
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>ቦዘኔ አድርግ (Inactive)</span>
-            </button>
-
-            {/* Suspend */}
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => handleBatchStatus("SUSPENDED")}
-              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition disabled:opacity-50"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>እገድ (Suspend)</span>
-            </button>
-
-            {/* Export Selected */}
-            <button
-              type="button"
-              onClick={handleExportSelected}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
-
-            {/* Delete Selected */}
-            {hasPermission("member.manage") && (
-              <button
-                type="button"
-                onClick={() => setShowBatchDeleteModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>ሰርዝ (Delete)</span>
-              </button>
-            )}
-
-            {/* Clear Selection */}
-            <button
-              type="button"
-              onClick={() => setSelectedIds([])}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
-              title="Clear selection"
-            >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-6">
+        {/* Flash Notifications */}
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm flex items-center justify-between shadow-sm animate-fade-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
               <X className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ========================================================================= */}
-      {/* MEMBERS DATA TABLE (EXACT AMHARIC COLUMNS & JEWEL GLOW ACTION BUTTONS)     */}
-      {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-16 text-center text-xs text-slate-400">Loading member roster...</div>
-        ) : members.length === 0 ? (
-          <div className="p-16 text-center text-xs text-slate-400">
-            No member records found matching the applied filter criteria.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              {/* Teal Header matching the provided screenshot */}
-              <thead
-                className="text-white font-bold uppercase tracking-wider text-[11px]"
-                style={{
-                  backgroundColor: "#0d5b61",
-                }}
-              >
-                <tr className="border-b border-[#0a464a]">
-                  <th className="px-3.5 py-4 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={handleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                    />
-                  </th>
-                  <th className="px-4 py-4">ተ.ቁ (No.)</th>
-                  <th className="px-4 py-4">ሙሉ ስም (Full Name)</th>
-                  <th className="px-4 py-4">ክርስትና ስም (Baptismal Name)</th>
-                  <th className="px-3 py-4">ጾታ (Gender)</th>
-                  <th className="px-4 py-4">ስልክ ቁጥር (Phone)</th>
-                  <th className="px-4 py-4">ዲፓርትመንት (Academic Dept)</th>
-                  <th className="px-4 py-4">የመጡበት ክልል (Origin Region)</th>
-                  <th className="px-3 py-4">ዞን (Zone)</th>
-                  <th className="px-3 py-4">ወረዳ (Woreda)</th>
-                  <th className="px-3 py-4">ቀበሌ (Kebele)</th>
-                  <th className="px-3 py-4">ብሎክ (Block)</th>
-                  <th className="px-3 py-4">ዶርም (Dorm)</th>
-                  <th className="px-3 py-4">ቋንቋ (Language)</th>
-                  <th className="px-4 py-4">የተጠሪ ስም (Emergency Contact)</th>
-                  <th className="px-4 py-4">የተጠሪ ስልክ (Emergency Phone)</th>
-                  <th className="px-4 py-4">የሰንበት ት/ቤት ቆይታ (Sunday School)</th>
-                  <th className="px-3 py-4">ዕድሜ (Age)</th>
-                  <th className="px-4 py-4">ሁኔታ (Status)</th>
-                  <th className="px-6 py-4 text-center">እርምጃዎች (Actions)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {members.map((m, idx) => {
-                  const isSelected = selectedIds.includes(m.id);
-                  return (
-                    <tr
-                      key={m.id}
-                      className={`transition-colors hover:bg-slate-50/90 ${
-                        isSelected ? "bg-blue-50/60" : idx % 2 === 0 ? "bg-white" : "bg-slate-50/30"
-                      }`}
-                    >
-                      {/* Checkbox */}
-                      <td className="px-3.5 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleSelectRow(m.id)}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                        />
-                      </td>
-
-                      {/* 1. ተ.ቁ (No.) */}
-                      <td className="px-4 py-3 font-mono font-bold text-slate-800">
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200 font-mono text-[11px]">
-                          {m.memberId}
-                        </span>
-                      </td>
-
-                      {/* 2. ሙሉ ስም (Full Name) */}
-                      <td className="px-4 py-3 font-bold text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <span>{m.fullName}</span>
-                          {m.spiritualStatus === "DEACON" && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">
-                              ዲያቆን
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 3. ክርስትና ስም (Baptismal Name) */}
-                      <td className="px-4 py-3 text-blue-950 font-semibold font-serif">
-                        {m.christianName || "—"}
-                      </td>
-
-                      {/* 4. ጾታ (Gender) */}
-                      <td className="px-3 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            m.gender === "FEMALE"
-                              ? "bg-rose-50 text-rose-700 border border-rose-200"
-                              : "bg-sky-50 text-sky-700 border border-sky-200"
-                          }`}
-                        >
-                          {m.gender === "FEMALE" ? "ሴት (F)" : "ወንድ (M)"}
-                        </span>
-                      </td>
-
-                      {/* 5. ስልክ ቁጥር (Phone) */}
-                      <td className="px-4 py-3 font-mono text-slate-600 text-[11px]">
-                        {m.phoneNumber || "—"}
-                      </td>
-
-                      {/* 6. ዲፓርትመንት (Academic Department) */}
-                      <td className="px-4 py-3 text-slate-800 font-medium">
-                        {m.academicDepartment || m.educationLevel || "—"}
-                      </td>
-
-                      {/* 7. የመጡበት ክልል (Origin Region) */}
-                      <td className="px-4 py-3 text-slate-700 font-medium">
-                        {m.originRegion || "—"}
-                      </td>
-
-                      {/* 8. ዞን (Zone) */}
-                      <td className="px-3 py-3 text-slate-600">{m.zone || "—"}</td>
-
-                      {/* 9. ወረዳ (Woreda) */}
-                      <td className="px-3 py-3 text-slate-600">{m.woreda || "—"}</td>
-
-                      {/* 10. ቀበሌ (Kebele) */}
-                      <td className="px-3 py-3 text-slate-600">{m.kebele || "—"}</td>
-
-                      {/* 11. ብሎክ (Block) */}
-                      <td className="px-3 py-3 font-mono text-slate-700 font-bold">
-                        {m.dormBlock || "—"}
-                      </td>
-
-                      {/* 12. ዶርም (Dorm) */}
-                      <td className="px-3 py-3 font-mono text-slate-700 font-bold">
-                        {m.dormRoom || "—"}
-                      </td>
-
-                      {/* 13. ቋንቋ (Language) */}
-                      <td className="px-3 py-3 text-slate-600">{m.language || "አማርኛ"}</td>
-
-                      {/* 14. የተጠሪ ስም (Emergency Contact) */}
-                      <td className="px-4 py-3 text-slate-700 font-medium">
-                        {m.emergencyContactName || m.emergencyContact || "—"}
-                      </td>
-
-                      {/* 15. የተጠሪ ስልክ (Emergency Phone) */}
-                      <td className="px-4 py-3 font-mono text-slate-500 text-[11px]">
-                        {m.emergencyContactPhone || "—"}
-                      </td>
-
-                      {/* 16. የሰንበት ት/ቤት ቆይታ (Sunday School Duration) */}
-                      <td className="px-4 py-3 text-slate-700 font-medium">
-                        {m.sundaySchoolDuration || "—"}
-                      </td>
-
-                      {/* 17. ዕድሜ (Age) */}
-                      <td className="px-3 py-3 font-mono text-slate-700 font-bold">
-                        {m.age || 21}
-                      </td>
-
-                      {/* 18. ሁኔታ (Status) */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            m.status === "ACTIVE"
-                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                              : m.status === "SUSPENDED"
-                              ? "bg-amber-50 text-amber-800 border border-amber-200"
-                              : "bg-slate-100 text-slate-600 border border-slate-200"
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              m.status === "ACTIVE"
-                                ? "bg-emerald-500 animate-pulse"
-                                : m.status === "SUSPENDED"
-                                ? "bg-amber-500"
-                                : "bg-slate-400"
-                            }`}
-                          />
-                          <span>
-                            {m.status === "ACTIVE"
-                              ? "ንቁ (Active)"
-                              : m.status === "SUSPENDED"
-                              ? "የታገደ (Suspended)"
-                              : "ቦዘኔ (Inactive)"}
-                          </span>
-                        </span>
-                      </td>
-
-                      {/* 19. እርምጃዎች (Actions: View, Edit, Suspend, Delete) */}
-                      <td className="px-6 py-3 text-center">
-                        <div className="inline-flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-2xl border border-slate-700/60 shadow-lg">
-                          {/* 1. View Details (Deep Blue Glow) */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedMember(m)}
-                            className="w-7 h-7 rounded-xl flex items-center justify-center text-blue-300 bg-blue-900/40 border border-blue-500/40 hover:bg-blue-800/60 hover:scale-105 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
-                            title="View Full Profile Details (ዝርዝር ይመልከቱ)"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* 2. Edit Member (Amber/Gold Glow) */}
-                          {hasPermission("member.manage") && (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEdit(m)}
-                              className="w-7 h-7 rounded-xl flex items-center justify-center text-amber-300 bg-amber-900/40 border border-amber-500/50 hover:bg-amber-800/60 hover:scale-105 shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all"
-                              title="Edit Member Information (መረጃ አሻሽል)"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {/* 3. Lock / Suspend (Green / Emerald Glow) */}
-                          {hasPermission("member.manage") && (
-                            <button
-                              type="button"
-                              onClick={() => handleToggleSuspend(m)}
-                              className={`w-7 h-7 rounded-xl flex items-center justify-center border hover:scale-105 transition-all ${
-                                m.status === "SUSPENDED"
-                                  ? "text-amber-400 bg-amber-950/60 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.35)]"
-                                  : "text-emerald-400 bg-emerald-950/60 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                              }`}
-                              title={
-                                m.status === "SUSPENDED"
-                                  ? "Lift Suspension (እግድ አንሳ)"
-                                  : "Suspend Member (እገድ)"
-                              }
-                            >
-                              <Lock className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {/* 4. Delete (Crimson/Red Glow) */}
-                          {hasPermission("member.manage") && (
-                            <button
-                              type="button"
-                              onClick={() => setDeletingMember(m)}
-                              className="w-7 h-7 rounded-xl flex items-center justify-center text-rose-400 bg-rose-950/60 border border-rose-500/50 hover:bg-rose-900/60 hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.3)] transition-all"
-                              title="Delete Member (አባል ሰርዝ)"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {successMsg && (
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 text-sm flex items-center justify-between shadow-sm animate-fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        {/* Server-Side Pagination Bar */}
-        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
-          <span>
-            Total Members: <strong className="text-slate-900">{totalCount}</strong> · Page {page} of{" "}
-            {Math.max(totalPages, 1)}
-          </span>
+        {/* 2. SIX EXECUTIVE KPI METRIC CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {/* Card 1: Total Members */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Enrolled</span>
+              <Users className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-slate-900">
+              {summaryLoading ? "..." : summary?.totalMembers ?? 0}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+              <span className="text-emerald-600 font-semibold">100%</span> Single campus rule
+            </div>
+          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page <= 1}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 transition"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="font-bold text-blue-900 px-2">{page}</span>
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page >= totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 transition"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          {/* Card 2: Active Fellowship */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Active Fellowship</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-emerald-600">
+              {summaryLoading ? "..." : summary?.activeMembers ?? 0}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+              <span className="font-medium text-emerald-700">Ready for allocation</span>
+            </div>
+          </div>
+
+          {/* Card 3: Inactive & On Hold */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">On Hold / Inactive</span>
+              <Clock className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-amber-600">
+              {summaryLoading ? "..." : (summary?.inactiveMembers ?? 0) + (summary?.onHoldMembers ?? 0)}
+            </div>
+            <div className="mt-1 text-xs text-slate-500">Requires review</div>
+          </div>
+
+          {/* Card 4: Suspended & Archived */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Archived / Flagged</span>
+              <Archive className="w-4 h-4 text-rose-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-rose-600">
+              {summaryLoading ? "..." : (summary?.archivedMembers ?? 0) + (summary?.suspendedMembers ?? 0)}
+            </div>
+            <div className="mt-1 text-xs text-slate-500">Preserved in DB</div>
+          </div>
+
+          {/* Card 5: Data Completeness */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Data Quality</span>
+              <Activity className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-blue-600">
+              {summaryLoading ? "..." : `${summary?.completenessRate ?? 95}%`}
+            </div>
+            <div className="mt-1 text-xs text-slate-500">Profile completeness</div>
+          </div>
+
+          {/* Card 6: Students vs Non-Students */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Campus Students</span>
+              <GraduationCap className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="text-2xl font-extrabold text-purple-600">
+              {summaryLoading ? "..." : summary?.categoryDistribution?.STUDENT ?? 0}
+            </div>
+            <div className="mt-1 text-xs text-slate-500">Academic fellowship</div>
+          </div>
+        </div>
+
+        {/* 3. RECHARTS DEMOGRAPHIC VISUALIZATIONS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Chart 1: Category Distribution */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <PieChartIcon className="w-4 h-4 text-indigo-600" />
+                Fellowship Demographic Breakdown
+              </h3>
+              <span className="text-xs text-slate-500">By Member Category</span>
+            </div>
+            <div className="h-48 flex items-center justify-center">
+              {categoryPieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryPieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={65}
+                      innerRadius={35}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                    >
+                      {categoryPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <span className="text-xs text-slate-400">No demographic data available</span>
+              )}
+            </div>
+          </div>
+
+          {/* Chart 2: Gender Distribution */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-blue-600" />
+                Gender Ratio & Spiritual Ministry
+              </h3>
+              <span className="text-xs text-slate-500">Active Membership</span>
+            </div>
+            <div className="h-48 flex items-center justify-center">
+              {genderBarData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={genderBarData}>
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#6366F1" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <span className="text-xs text-slate-400">No gender data available</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 4. ADVANCED FILTERING & SEARCH TOOLBAR */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            {/* Search Input */}
+            <div className="lg:col-span-2 relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by code, full name, phone, dept..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">All Statuses</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+                <option value="SUSPENDED">SUSPENDED</option>
+                <option value="ON_HOLD">ON HOLD</option>
+                <option value="ARCHIVED">ARCHIVED</option>
+              </select>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">All Categories</option>
+                <option value="STUDENT">STUDENT</option>
+                <option value="YOUTH">YOUTH</option>
+                <option value="YOUNG_ADULT">YOUNG ADULT</option>
+                <option value="ADULT">ADULT</option>
+                <option value="ELDER">ELDER</option>
+              </select>
+            </div>
+
+            {/* Spiritual Status Filter */}
+            <div>
+              <select
+                value={spiritualFilter}
+                onChange={(e) => {
+                  setSpiritualFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">All Spiritual Roles</option>
+                <option value="REGULAR">REGULAR</option>
+                <option value="SERVANT">SERVANT</option>
+                <option value="DEACON">DEACON</option>
+              </select>
+            </div>
+
+            {/* Gender Filter */}
+            <div>
+              <select
+                value={genderFilter}
+                onChange={(e) => {
+                  setGenderFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">All Genders</option>
+                <option value="MALE">MALE</option>
+                <option value="FEMALE">FEMALE</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Reset Filters */}
+          {(search || statusFilter || categoryFilter || spiritualFilter || genderFilter) && (
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
+              <span>Filtering active results ({totalCount} found)</span>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setStatusFilter("");
+                  setCategoryFilter("");
+                  setSpiritualFilter("");
+                  setGenderFilter("");
+                  setPage(1);
+                }}
+                className="text-indigo-600 font-semibold hover:underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 5. BATCH ACTIONS TOOLBAR (Appears when items are selected) */}
+        {selectedIds.length > 0 && (
+          <div className="bg-indigo-900 text-white rounded-xl p-3 px-5 flex flex-wrap items-center justify-between gap-4 shadow-md animate-fade-in">
+            <div className="flex items-center gap-3">
+              <CheckSquare className="w-5 h-5 text-indigo-300" />
+              <span className="font-semibold text-sm">
+                {selectedIds.length} member{selectedIds.length > 1 ? "s" : ""} selected
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleBatchStatus("ACTIVE")}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold transition"
+              >
+                Set Active
+              </button>
+              <button
+                onClick={() => handleBatchStatus("INACTIVE")}
+                className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-xs font-semibold transition"
+              >
+                Set Inactive
+              </button>
+              <button
+                onClick={() => handleBatchStatus("ARCHIVED")}
+                className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-xs font-semibold transition"
+              >
+                Archive Selected
+              </button>
+              <button
+                onClick={() => setShowBatchDeleteModal(true)}
+                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-xs font-semibold transition"
+              >
+                Delete Selected
+              </button>
+              <button
+                onClick={() => setSelectedIds([])}
+                className="px-2.5 py-1.5 text-xs text-indigo-200 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 6. PRIMARY DATA TABLE */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3.5 px-4 w-10 text-center">
+                    <button onClick={toggleSelectAll} className="text-slate-500 hover:text-slate-800">
+                      {selectedIds.length > 0 && selectedIds.length === members.length ? (
+                        <CheckSquare className="w-4 h-4 text-indigo-600" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="py-3.5 px-4">Member ID & Code</th>
+                  <th className="py-3.5 px-4">Full & Christian Name</th>
+                  <th className="py-3.5 px-4">Gender & Age</th>
+                  <th className="py-3.5 px-4">Academic Dept / Category</th>
+                  <th className="py-3.5 px-4">Spiritual Status</th>
+                  <th className="py-3.5 px-4">Contact</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                      Loading member directory...
+                    </td>
+                  </tr>
+                ) : members.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                      <Users className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                      <p className="font-semibold text-slate-700">No members found</p>
+                      <p className="text-xs text-slate-400 mt-1">Try adjusting your filters or search term.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  members.map((m) => {
+                    const isSelected = selectedIds.includes(m.id);
+                    return (
+                      <tr
+                        key={m.id}
+                        className={`hover:bg-indigo-50/40 transition ${
+                          isSelected ? "bg-indigo-50/60" : ""
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="py-3.5 px-4 text-center">
+                          <button
+                            onClick={() => toggleSelectOne(m.id)}
+                            className="text-slate-400 hover:text-slate-700"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-indigo-600" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+
+                        {/* Member ID Code */}
+                        <td className="py-3.5 px-4">
+                          <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                            {m.memberId}
+                          </span>
+                        </td>
+
+                        {/* Full & Christian Name */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slate-900">{m.fullName}</div>
+                          {m.christianName && (
+                            <div className="text-xs text-amber-700 font-medium flex items-center gap-1">
+                              <Church className="w-3 h-3 text-amber-600" />
+                              {m.christianName}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Gender & Age */}
+                        <td className="py-3.5 px-4 text-slate-600">
+                          <div>{m.gender}</div>
+                          <div className="text-xs text-slate-400">{m.age ? `${m.age} yrs` : "N/A"}</div>
+                        </td>
+
+                        {/* Academic Dept / Category */}
+                        <td className="py-3.5 px-4">
+                          <div className="text-slate-800 font-medium">
+                            {m.academicDepartment || "Undeclared"}
+                          </div>
+                          <span className="inline-block text-[11px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-100">
+                            {m.category}
+                          </span>
+                        </td>
+
+                        {/* Spiritual Status */}
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              m.spiritualStatus === "DEACON"
+                                ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                : m.spiritualStatus === "SERVANT"
+                                ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            {m.spiritualStatus}
+                          </span>
+                        </td>
+
+                        {/* Contact */}
+                        <td className="py-3.5 px-4 text-xs text-slate-600 space-y-0.5">
+                          {m.phoneNumber && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              {m.phoneNumber}
+                            </div>
+                          )}
+                          {m.dormRoom && (
+                            <div className="text-[11px] text-slate-400">Dorm: {m.dormRoom}</div>
+                          )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4 text-center">{getStatusBadge(m.status)}</td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* View Profile Drawer */}
+                            <button
+                              onClick={() => setSelectedMember(m)}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition"
+                              title="View Full Profile (360°)"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+
+                            {/* Edit (Rule 6: Member Code Immutable) */}
+                            {hasPermission("members:write") && (
+                              <button
+                                onClick={() => openEditModal(m)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition"
+                                title="Edit Member Profile"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Status Change (Rule 9: Mandatory Justification) */}
+                            {hasPermission("members:write") && (
+                              <button
+                                onClick={() => openStatusModal(m)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 transition"
+                                title="Transition Member Status"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Audit Trail Timeline */}
+                            <button
+                              onClick={() => openHistoryModal(m)}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-slate-100 transition"
+                              title="Audit History Timeline"
+                            >
+                              <History className="w-4 h-4" />
+                            </button>
+
+                            {/* Soft Archive / Delete */}
+                            {hasPermission("members:delete") && (
+                              <button
+                                onClick={() => setDeletingMember(m)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-100 transition"
+                                title="Archive Member Record"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Footer */}
+          <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div>
+              Showing {members.length} of {totalCount} total members (Page {page} of {totalPages || 1})
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition flex items-center gap-1 font-medium"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" /> Previous
+              </button>
+              <span className="font-semibold text-slate-700 px-2">{page}</span>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition flex items-center gap-1 font-medium"
+              >
+                Next <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 1. VIEW MEMBER FULL DETAILS MODAL                                         */}
-      {/* ========================================================================= */}
-      {selectedMember && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
-            <div
-              className="h-2.5 w-full shrink-0"
-              style={{
-                background: "linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #f59e0b 100%)",
-              }}
-            />
-
-            <div className="p-6 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex items-center justify-center font-bold text-lg shadow-md border border-blue-900/40">
-                  {selectedMember.firstName[0]}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-lg text-slate-900">{selectedMember.fullName}</h3>
-                    <span className="font-mono text-xs font-bold text-blue-900 bg-blue-100 px-2 py-0.5 rounded border border-blue-200">
-                      {selectedMember.memberId}
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-900 font-serif font-bold mt-0.5">
-                    ክርስትና ስም (Baptismal Name): {selectedMember.christianName || "ያልተጠቀሰ"}
-                  </p>
-                </div>
+      {/* =========================================================================
+          7. FIVE-SECTION REGISTRATION MODAL
+         ========================================================================= */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-900 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-indigo-400" />
+                  Official Member Registration
+                </h3>
+                <p className="text-xs text-indigo-200 mt-0.5">
+                  5-Section Fellowship Profile (Automatic sequence code generation: MEM-YYYY-XXXX)
+                </p>
               </div>
               <button
-                onClick={() => setSelectedMember(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition"
+                onClick={() => setShowCreateModal(false)}
+                className="text-white/70 hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 text-xs">
-              {/* Status Ribbon */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">ጾታ (Gender)</span>
-                  <strong className="text-slate-900">{selectedMember.gender}</strong>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">ዕድሜ (Age)</span>
-                  <strong className="text-slate-900">{selectedMember.age || 21} ዓመት</strong>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">መንፈሳዊ ማዕረግ</span>
-                  <strong className="text-purple-800">{selectedMember.spiritualStatus}</strong>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">የአባልነት ሁኔታ</span>
-                  <strong
-                    className={
-                      selectedMember.status === "ACTIVE"
-                        ? "text-emerald-700"
-                        : selectedMember.status === "SUSPENDED"
-                        ? "text-amber-700"
-                        : "text-slate-600"
-                    }
-                  >
-                    {selectedMember.status}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Academic & Campus Details */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-blue-900" />
-                  <span>የትምህርትና የግቢ መኖሪያ መረጃ (Academic & Dormitory)</span>
+            {/* Modal Body */}
+            <form onSubmit={handleCreateSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* SECTION 1: Campus & Academic Identity */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4" /> Section 1: Campus & Academic Identification
                 </h4>
-                <div className="grid grid-cols-2 gap-3 text-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ዲፓርትመንት</span>
-                    <span>{selectedMember.academicDepartment || selectedMember.educationLevel || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Church Campus *
+                    </label>
+                    <select
+                      required
+                      value={formData.campusId}
+                      onChange={(e) => setFormData({ ...formData, campusId: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="">Select Campus</option>
+                      {campuses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.code})
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">የሰንበት ት/ቤት ቆይታ</span>
-                    <span>{selectedMember.sundaySchoolDuration || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Academic Department *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Computer Science, Medicine"
+                      value={formData.academicDepartment}
+                      onChange={(e) => setFormData({ ...formData, academicDepartment: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ብሎክና ዶርም ቁጥር</span>
-                    <span className="font-mono font-bold">
-                      {selectedMember.dormBlock || "—"} · {selectedMember.dormRoom || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">የመገናኛ ቋንቋ</span>
-                    <span>{selectedMember.language || "አማርኛ"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Education Level
+                    </label>
+                    <select
+                      value={formData.educationLevel}
+                      onChange={(e) => setFormData({ ...formData, educationLevel: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="Undergraduate Degree">Undergraduate Degree</option>
+                      <option value="Postgraduate Masters">Postgraduate Masters</option>
+                      <option value="Doctorate (PhD)">Doctorate (PhD)</option>
+                      <option value="Diploma / TVET">Diploma / TVET</option>
+                      <option value="High School">High School</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Residence & Origin */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-blue-900" />
-                  <span>የመጡበት አካባቢና አድራሻ (Origin Region & Address)</span>
+              {/* SECTION 2: Personal Identity */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Section 2: Personal Profile & Baptism
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ክልል</span>
-                    <span>{selectedMember.originRegion || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      First Name (ስም) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Yohannes"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ዞን</span>
-                    <span>{selectedMember.zone || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Last Name (የአባት ስም) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Haile"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ወረዳ</span>
-                    <span>{selectedMember.woreda || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Christian Name (የክርስትና ስም)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ወልደ ማርያም"
+                      value={formData.christianName}
+                      onChange={(e) => setFormData({ ...formData, christianName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ቀበሌ</span>
-                    <span>{selectedMember.kebele || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="MALE">MALE</option>
+                      <option value="FEMALE">FEMALE</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Age</label>
+                    <input
+                      type="number"
+                      min={10}
+                      max={100}
+                      value={formData.age}
+                      onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Fellowship Category
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value as MemberCategory })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="STUDENT">STUDENT</option>
+                      <option value="YOUTH">YOUTH</option>
+                      <option value="YOUNG_ADULT">YOUNG ADULT</option>
+                      <option value="ADULT">ADULT</option>
+                      <option value="ELDER">ELDER</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Emergency Contacts */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <Phone className="w-4 h-4 text-blue-900" />
-                  <span>የአስቸኳይ ጊዜ ተጠሪና ስልክ (Emergency Contact)</span>
+              {/* SECTION 3: Contact & Campus Residence */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" /> Section 3: Contact & Campus Residence
                 </h4>
-                <div className="grid grid-cols-2 gap-3 text-slate-700">
-                  <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">የአባል ስልክ</span>
-                    <span className="font-mono">{selectedMember.phoneNumber || "—"}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+251911223344"
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
-                  <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">ኢሜይል</span>
-                    <span className="font-mono">{selectedMember.email || "—"}</span>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      placeholder="member@c-cimas.org"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">የተጠሪ ስም</span>
-                    <span>{selectedMember.emergencyContactName || selectedMember.emergencyContact || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Dorm Block
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Block 42"
+                      value={formData.dormBlock}
+                      onChange={(e) => setFormData({ ...formData, dormBlock: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
+
                   <div>
-                    <span className="font-semibold block text-slate-400 text-[10px]">የተጠሪ ስልክ</span>
-                    <span className="font-mono">{selectedMember.emergencyContactPhone || "—"}</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Dorm Room
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Room 204"
+                      value={formData.dormRoom}
+                      onChange={(e) => setFormData({ ...formData, dormRoom: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Primary Language
+                    </label>
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      {ETHIOPIAN_LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-4 border-t border-slate-100 flex justify-end shrink-0">
-              <button
-                onClick={() => setSelectedMember(null)}
-                className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition"
-              >
-                Close Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              {/* SECTION 4: Origin & Spiritual Heritage */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                  <Church className="w-4 h-4" /> Section 4: Origin & Spiritual Profile
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Origin Region (ክልል)
+                    </label>
+                    <select
+                      value={formData.originRegion}
+                      onChange={(e) => setFormData({ ...formData, originRegion: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      {ETHIOPIAN_REGIONS.map((reg) => (
+                        <option key={reg} value={reg}>
+                          {reg}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-      {/* ========================================================================= */}
-      {/* 2. EDIT MEMBER FORM MODAL                                                  */}
-      {/* ========================================================================= */}
-      {editingMember && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
-            <div className="h-2.5 w-full bg-amber-500 shrink-0" />
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-                  <Edit className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900">የአባል መረጃ አሻሽል (Edit Member)</h3>
-                  <p className="text-xs text-slate-500 font-mono">{editingMember.memberId}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setEditingMember(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Spiritual Status *
+                    </label>
+                    <select
+                      value={formData.spiritualStatus}
+                      onChange={(e) => setFormData({ ...formData, spiritualStatus: e.target.value as SpiritualStatus })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="REGULAR">REGULAR (ምእመን)</option>
+                      <option value="SERVANT">SERVANT (አገልጋይ)</option>
+                      <option value="DEACON">DEACON (ዲያቆን)</option>
+                    </select>
+                  </div>
 
-            <form onSubmit={handleUpdate} className="p-6 overflow-y-auto space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    First Name (ስም) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.firstName || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    Last Name (የአባት ስም) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.lastName || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Sunday School Duration
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 4 ዓመት"
+                      value={formData.sundaySchoolDuration}
+                      onChange={(e) => setFormData({ ...formData, sundaySchoolDuration: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    ክርስትና ስም (Baptismal Name)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ገብረ ማርያም"
-                    value={editFormData.christianName || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, christianName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ጾታ (Gender)</label>
-                  <select
-                    value={editFormData.gender || "MALE"}
-                    onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value as Gender })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  >
-                    <option value="MALE">ወንድ (MALE)</option>
-                    <option value="FEMALE">ሴት (FEMALE)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ዕድሜ (Age)</label>
-                  <input
-                    type="number"
-                    min="15"
-                    max="80"
-                    value={editFormData.age || 20}
-                    onChange={(e) => setEditFormData({ ...editFormData, age: parseInt(e.target.value) || 20 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
+              {/* SECTION 5: Emergency Contact */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                  <Shield className="w-4 h-4" /> Section 5: Emergency & Guardian Contact
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Emergency Contact Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Guardian / Family Name"
+                      value={formData.emergencyContactName}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Emergency Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="+251911..."
+                      value={formData.emergencyContactPhone}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ስልክ ቁጥር</label>
-                  <input
-                    type="text"
-                    value={editFormData.phoneNumber || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ዲፓርትመንት</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Computer Science"
-                    value={editFormData.academicDepartment || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, academicDepartment: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ሁኔታ (Status)</label>
-                  <select
-                    value={editFormData.status || "ACTIVE"}
-                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as MemberStatus })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  >
-                    <option value="ACTIVE">ንቁ (ACTIVE)</option>
-                    <option value="INACTIVE">ቦዘኔ (INACTIVE)</option>
-                    <option value="SUSPENDED">የታገደ (SUSPENDED)</option>
-                  </select>
-                </div>
+              {/* Concurrency-safe automatic code note */}
+              <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl text-xs text-indigo-800 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                <span>
+                  Member Code will be automatically generated atomically on submission (e.g.{" "}
+                  <code className="font-mono font-bold">MEM-2026-XXXX</code>) guaranteeing concurrency safety.
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">የመጡበት ክልል</label>
-                  <input
-                    type="text"
-                    value={editFormData.originRegion || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, originRegion: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ዞን (Zone)</label>
-                  <input
-                    type="text"
-                    value={editFormData.zone || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, zone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ብሎክ (Block)</label>
-                  <input
-                    type="text"
-                    value={editFormData.dormBlock || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, dormBlock: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">ዶርም (Room)</label>
-                  <input
-                    type="text"
-                    value={editFormData.dormRoom || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, dormRoom: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">የተጠሪ ስም</label>
-                  <input
-                    type="text"
-                    value={editFormData.emergencyContactName || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, emergencyContactName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">የተጠሪ ስልክ</label>
-                  <input
-                    type="text"
-                    value={editFormData.emergencyContactPhone || ""}
-                    onChange={(e) => setEditFormData({ ...editFormData, emergencyContactPhone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              {/* Submit Buttons */}
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setEditingMember(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow-md shadow-blue-900/30 transition disabled:opacity-50"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-indigo-600/30 transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                  Register Member
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          8. EDIT MODAL (Rule 6: Member Code Immutable)
+         ========================================================================= */}
+      {editingMember && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-blue-400" />
+                  Edit Member Profile
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Member ID: <span className="font-mono text-amber-300">{editingMember.memberId}</span> (Strictly Immutable per Rule 6)
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingMember(null)}
+                className="text-white/70 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">First Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.firstName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.lastName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Christian Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.christianName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, christianName: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={editFormData.phoneNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Academic Department</label>
+                  <input
+                    type="text"
+                    value={editFormData.academicDepartment || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, academicDepartment: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Spiritual Status</label>
+                  <select
+                    value={editFormData.spiritualStatus || "REGULAR"}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, spiritualStatus: e.target.value as SpiritualStatus })
+                    }
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  >
+                    <option value="REGULAR">REGULAR</option>
+                    <option value="SERVANT">SERVANT</option>
+                    <option value="DEACON">DEACON</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Dorm Block & Room</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Block"
+                      value={editFormData.dormBlock || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, dormBlock: e.target.value })}
+                      className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Room"
+                      value={editFormData.dormRoom || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, dormRoom: e.target.value })}
+                      className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={editFormData.category || "STUDENT"}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, category: e.target.value as MemberCategory })
+                    }
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  >
+                    <option value="STUDENT">STUDENT</option>
+                    <option value="YOUTH">YOUTH</option>
+                    <option value="YOUNG_ADULT">YOUNG ADULT</option>
+                    <option value="ADULT">ADULT</option>
+                    <option value="ELDER">ELDER</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow transition disabled:opacity-50"
                 >
                   {submitting ? "Saving..." : "Save Changes"}
                 </button>
@@ -1389,329 +1716,343 @@ export const MembersPage: React.FC = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. SINGLE DELETE CONFIRMATION MODAL                                       */}
-      {/* ========================================================================= */}
-      {deletingMember && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="h-2.5 w-full bg-rose-600" />
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Delete Member Record</h3>
-                  <p className="text-[11px] text-slate-500">Confirm permanent removal</p>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
-                <p className="font-bold">
-                  Are you sure you want to delete &ldquo;{deletingMember.fullName}&rdquo; ({deletingMember.memberId})?
-                </p>
-                <p className="text-slate-600">
-                  This action will permanently delete this member&apos;s registration and evaluation records.
-                </p>
-              </div>
-
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => setDeletingMember(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={handleDeleteSingle}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition disabled:opacity-50"
-                >
-                  {submitting ? "Deleting..." : "Delete Member"}
-                </button>
-              </div>
+      {/* =========================================================================
+          9. STATUS TRANSITION MODAL (Rule 9: Mandatory Justification)
+         ========================================================================= */}
+      {statusTargetMember && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+            <div className="flex items-center gap-3 mb-4 text-amber-600">
+              <UserCheck className="w-6 h-6" />
+              <h3 className="text-lg font-bold text-slate-900">Member Status Transition</h3>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ========================================================================= */}
-      {/* 5. BATCH DELETE CONFIRMATION MODAL                                        */}
-      {/* ========================================================================= */}
-      {showBatchDeleteModal && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="h-2.5 w-full bg-rose-600" />
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Batch Delete Members</h3>
-                  <p className="text-[11px] text-slate-500">Remove multiple selected records</p>
-                </div>
-              </div>
+            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+              Updating status for <span className="font-semibold text-slate-900">{statusTargetMember.fullName}</span> ({statusTargetMember.memberId}). Current status:{" "}
+              <span className="font-bold">{statusTargetMember.status}</span>.
+            </p>
 
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
-                <p className="font-bold">
-                  Are you sure you want to permanently delete {selectedIds.length} selected member records?
-                </p>
-                <p className="text-slate-600">
-                  This cannot be undone. All demographic and allocation associations will be removed.
-                </p>
-              </div>
-
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => setShowBatchDeleteModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={handleBatchDelete}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/30 transition disabled:opacity-50"
-                >
-                  {submitting ? "Deleting..." : `Delete ${selectedIds.length} Members`}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 5. REGISTER MEMBER MODAL (Full 17 Fields)                                 */}
-      {/* ========================================================================= */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
-            <div
-              className="h-2.5 w-full shrink-0"
-              style={{
-                background: "linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #f59e0b 100%)",
-              }}
-            />
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <form onSubmit={handleStatusSubmit} className="space-y-4">
               <div>
-                <h3 className="font-bold text-base text-slate-900">አዲስ የግቢ ጉባኤ አባል መዝግብ (Register Member)</h3>
-                <p className="text-xs text-slate-500">Enter complete 17 official fields for C-CIMAS roster</p>
-              </div>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ተ.ቁ (Member ID) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. MEM-2026-901"
-                    value={formData.memberId}
-                    onChange={(e) => setFormData({ ...formData, memberId: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Campus *</label>
-                  <select
-                    value={formData.campusId}
-                    onChange={(e) => setFormData({ ...formData, campusId: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  >
-                    {campuses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Target Status *
+                </label>
+                <select
+                  value={targetStatus}
+                  onChange={(e) => setTargetStatus(e.target.value as MemberStatus)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                  <option value="ON_HOLD">ON HOLD</option>
+                  <option value="ARCHIVED">ARCHIVED</option>
+                </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">First Name (ስም) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="First Name"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name (የአባት ስም) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Official Justification Reason * (Rule 9 Audit Requirement)
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Enter detailed reason for status change (stored in member_status_history audit log)..."
+                  value={statusReason}
+                  onChange={(e) => setStatusReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                ></textarea>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ክርስትና ስም</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ገብረ ማርያም"
-                    value={formData.christianName}
-                    onChange={(e) => setFormData({ ...formData, christianName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ጾታ (Gender) *</label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  >
-                    <option value="MALE">ወንድ (MALE)</option>
-                    <option value="FEMALE">ሴት (FEMALE)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ዕድሜ (Age)</label>
-                  <input
-                    type="number"
-                    min="15"
-                    max="80"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 21 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ስልክ ቁጥር</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. +251911223344"
-                    value={formData.phoneNumber}
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ዲፓርትመንት (Academic Dept)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Computer Science / Medicine"
-                    value={formData.academicDepartment}
-                    onChange={(e) => setFormData({ ...formData, academicDepartment: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">የመጡበት ክልል</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. አዲስ አበባ"
-                    value={formData.originRegion}
-                    onChange={(e) => setFormData({ ...formData, originRegion: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ዞን (Zone)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ሰሜን ሸዋ"
-                    value={formData.zone}
-                    onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ብሎክ (Block)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Block 42"
-                    value={formData.dormBlock}
-                    onChange={(e) => setFormData({ ...formData, dormBlock: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ዶርም (Dorm)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Room 204"
-                    value={formData.dormRoom}
-                    onChange={(e) => setFormData({ ...formData, dormRoom: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">የተጠሪ ስም</label>
-                  <input
-                    type="text"
-                    placeholder="Contact Name"
-                    value={formData.emergencyContactName}
-                    onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">የተጠሪ ስልክ</label>
-                  <input
-                    type="text"
-                    placeholder="Contact Phone"
-                    value={formData.emergencyContactPhone}
-                    onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  onClick={() => setStatusTargetMember(null)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow-md shadow-blue-900/30 transition disabled:opacity-50"
+                  disabled={submitting || !statusReason.trim()}
+                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
                 >
-                  {submitting ? "Registering..." : "Register Member"}
+                  {submitting ? "Updating..." : "Confirm Status Change"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* =========================================================================
+          10. STATUS HISTORY AUDIT TIMELINE MODAL
+         ========================================================================= */}
+      {historyTargetMember && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden animate-scale-up">
+            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold flex items-center gap-2">
+                  <History className="w-5 h-5 text-indigo-400" />
+                  Status Audit History Trail
+                </h3>
+                <p className="text-xs text-indigo-200 mt-0.5">
+                  {historyTargetMember.fullName} ({historyTargetMember.memberId})
+                </p>
+              </div>
+              <button
+                onClick={() => setHistoryTargetMember(null)}
+                className="text-white/70 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              {historyLoading ? (
+                <div className="py-8 text-center text-slate-400">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                  Loading audit logs...
+                </div>
+              ) : historyList.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-sm">
+                  No status transition history recorded for this member.
+                </div>
+              ) : (
+                <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                  {historyList.map((item) => (
+                    <div key={item.id} className="relative">
+                      <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow"></div>
+                      <div className="text-xs text-slate-400 mb-1">
+                        {new Date(item.changedAt).toLocaleString()}
+                      </div>
+                      <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                        <span className="font-mono text-xs px-2 py-0.5 bg-slate-100 rounded text-slate-600">
+                          {item.oldStatus}
+                        </span>
+                        <span>→</span>
+                        <span className="font-mono text-xs px-2 py-0.5 bg-indigo-100 rounded text-indigo-800 font-bold">
+                          {item.newStatus}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 italic">
+                        "{item.reason}"
+                      </p>
+                      <div className="mt-1 text-[11px] text-slate-400">
+                        Authorized by: <span className="font-medium text-slate-600">{item.changedByName}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          11. 360-DEGREE MEMBER DETAIL DRAWER
+         ========================================================================= */}
+      {selectedMember && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex justify-end">
+          <div className="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col overflow-hidden animate-slide-left">
+            {/* Drawer Header */}
+            <div className="p-6 bg-gradient-to-r from-slate-900 to-indigo-900 text-white flex items-center justify-between">
+              <div>
+                <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-500/30 border border-indigo-400/30 rounded text-indigo-200">
+                  {selectedMember.memberId}
+                </span>
+                <h3 className="text-xl font-bold mt-1 text-white">{selectedMember.fullName}</h3>
+                {selectedMember.christianName && (
+                  <p className="text-xs text-amber-300 flex items-center gap-1 mt-0.5">
+                    <Church className="w-3.5 h-3.5" /> ክርስትና ስም: {selectedMember.christianName}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="text-white/70 hover:text-white p-2 rounded-lg"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm">
+              {/* Status & Category Pills */}
+              <div className="flex items-center gap-2">
+                {getStatusBadge(selectedMember.status)}
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                  {selectedMember.category}
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                  {selectedMember.spiritualStatus}
+                </span>
+              </div>
+
+              {/* Grid Attributes */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <span className="text-xs text-slate-400 block">Gender & Age</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedMember.gender}, {selectedMember.age || "N/A"} years
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Academic Department</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedMember.academicDepartment || "Undeclared"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Education Level</span>
+                  <span className="font-semibold text-slate-800">{selectedMember.educationLevel}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Primary Language</span>
+                  <span className="font-semibold text-slate-800">{selectedMember.language || "አማርኛ"}</span>
+                </div>
+              </div>
+
+              {/* Contact & Campus Residence */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Contact & Residence
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <span>{selectedMember.phoneNumber || "No phone registered"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                    <span>{selectedMember.email || "No email registered"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Building2 className="w-4 h-4 text-slate-400" />
+                    <span>
+                      Dorm: {selectedMember.dormBlock || "N/A"} - {selectedMember.dormRoom || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Spiritual & Origin Heritage */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Spiritual Heritage & Origin
+                </h4>
+                <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-700">
+                  <div>
+                    <span className="text-slate-400">Origin Region:</span>{" "}
+                    <span className="font-semibold">{selectedMember.originRegion || "አዲስ አበባ"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Sunday School Experience:</span>{" "}
+                    <span className="font-semibold">{selectedMember.sundaySchoolDuration || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Emergency Contact */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Emergency Guardian
+                </h4>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1">
+                  <div className="font-semibold text-slate-800">
+                    {selectedMember.emergencyContactName || "Not Provided"}
+                  </div>
+                  <div className="text-slate-500">{selectedMember.emergencyContactPhone || ""}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  const m = selectedMember;
+                  setSelectedMember(null);
+                  openEditModal(m);
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition"
+              >
+                Edit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          12. DELETE / ARCHIVE CONFIRMATION MODALS
+         ========================================================================= */}
+      {deletingMember && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+            <div className="flex items-center gap-3 mb-4 text-rose-600">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-lg font-bold text-slate-900">Archive Member Record</h3>
+            </div>
+            <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+              Are you sure you want to archive{" "}
+              <span className="font-semibold text-slate-900">{deletingMember.fullName}</span> (
+              {deletingMember.memberId})? Per Rule 5, this record will be safely soft-archived rather
+              than permanently erased from historical registers.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeletingMember(null)}
+                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={submitting}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+              >
+                {submitting ? "Archiving..." : "Confirm Soft Archive"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBatchDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+            <div className="flex items-center gap-3 mb-4 text-rose-600">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-lg font-bold text-slate-900">Batch Archive Members</h3>
+            </div>
+            <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+              Are you sure you want to soft-archive{" "}
+              <span className="font-semibold text-slate-900">{selectedIds.length}</span> selected
+              members? Records remain retained in historical audit tables.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowBatchDeleteModal(false)}
+                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBatchDeleteConfirm}
+                disabled={submitting}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+              >
+                {submitting ? "Archiving..." : "Archive Selected"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export default MembersPage;
