@@ -498,36 +498,48 @@ export const MembersPage: React.FC = () => {
     switch (status) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="cimas-badge cimas-badge--active">
+            <span className="badge-ping-wrap">
+              <span className="badge-ping"></span>
+              <span className="badge-dot"></span>
+            </span>
             ACTIVE
           </span>
         );
       case "INACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span className="cimas-badge cimas-badge--inactive">
+            <span className="badge-ping-wrap">
+              <span className="badge-ping"></span>
+              <span className="badge-dot"></span>
+            </span>
             INACTIVE
           </span>
         );
       case "SUSPENDED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          <span className="cimas-badge cimas-badge--suspended">
+            <span className="badge-ping-wrap">
+              <span className="badge-ping"></span>
+              <span className="badge-dot"></span>
+            </span>
             SUSPENDED
           </span>
         );
       case "ON_HOLD":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+          <span className="cimas-badge cimas-badge--on-hold">
+            <span className="badge-ping-wrap">
+              <span className="badge-ping"></span>
+              <span className="badge-dot"></span>
+            </span>
             ON HOLD
           </span>
         );
       case "ARCHIVED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span className="cimas-badge cimas-badge--archived">
+            <span className="badge-dot"></span>
             ARCHIVED
           </span>
         );
@@ -556,103 +568,91 @@ export const MembersPage: React.FC = () => {
   }, [summary]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-16">
-      {/* 1. CANVA-INSPIRED EXECUTIVE HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white shadow-xl">
-        {/* Dual wave SVG overlay */}
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
-            <path
-              fill="#ffffff"
-              d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,133.3C672,139,768,181,864,186.7C960,192,1056,160,1152,149.3C1248,139,1344,149,1392,154.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,964,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            ></path>
-          </svg>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070b13] text-slate-900 dark:text-slate-100 pb-16 cimas-mesh-bg transition-colors">
+      {/* 1. CANVA-INSPIRED EXECUTIVE HERO BANNER WITH SCSS DYNAMICS */}
+      <div className="cimas-hero-banner relative mb-8">
+        <div className="ambient-orb ambient-orb--blue" />
+        <div className="ambient-orb ambient-orb--purple" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  Module 3: Enterprise Member Management
-                </span>
-                <span className="text-xs text-indigo-200/80">C-CIMAS Orthodox Core</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
-                <Users className="w-9 h-9 text-indigo-400" />
-                Member CRM & Fellowship Directory
-              </h1>
-              <p className="mt-2 text-indigo-200 text-sm sm:text-base max-w-2xl leading-relaxed">
-                Centralized registry enforcing single-campus membership, concurrency-safe member code
-                generation (<span className="text-amber-300 font-mono">MEM-YYYY-XXXX</span>), status audit trails, and Ethiopian Orthodox fellowship criteria.
-              </p>
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <div className="hero-badge">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse-glow" />
+              <span>Module 3: Enterprise Member Management</span>
             </div>
+            <h1 className="hero-title flex items-center gap-3">
+              <Users className="w-9 h-9 text-indigo-400" />
+              Member CRM & Fellowship Directory
+            </h1>
+            <p className="hero-subtitle">
+              Centralized registry enforcing single-campus membership, concurrency-safe member code
+              generation (<span className="text-amber-300 font-mono font-bold">MEM-YYYY-XXXX</span>), status audit trails, and Ethiopian Orthodox fellowship criteria.
+            </p>
+          </div>
 
-            {/* Quick Actions & Campus Filter */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Campus Selector */}
-              <div className="relative">
-                <select
-                  value={selectedCampusId}
-                  onChange={(e) => {
-                    setSelectedCampusId(e.target.value);
-                    setPage(1);
-                  }}
-                  className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-400 focus:outline-none backdrop-blur-md"
-                >
-                  <option value="" className="text-slate-900">
-                    All Campuses (Enterprise View)
-                  </option>
-                  {campuses.map((c) => (
-                    <option key={c.id} value={c.id} className="text-slate-900">
-                      {c.name} ({c.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Export CSV */}
-              <button
-                onClick={handleExportCSV}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-sm font-medium transition shadow-sm backdrop-blur-md"
-                title="Export filtered records to CSV"
-              >
-                <Download className="w-4 h-4 text-emerald-300" />
-                Export
-              </button>
-
-              {/* Refresh */}
-              <button
-                onClick={() => {
-                  loadMembers();
-                  loadSummary();
+          {/* Quick Actions & Campus Filter */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Campus Selector */}
+            <div className="relative">
+              <select
+                value={selectedCampusId}
+                onChange={(e) => {
+                  setSelectedCampusId(e.target.value);
+                  setPage(1);
                 }}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition backdrop-blur-md"
-                title="Refresh Directory"
+                className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-400 focus:outline-none backdrop-blur-md"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              </button>
-
-              {/* New Member Registration Button */}
-              {hasPermission("members:write") && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Register Member
-                </button>
-              )}
+                <option value="" className="text-slate-900">
+                  All Campuses (Enterprise View)
+                </option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.id} className="text-slate-900">
+                    {c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Export CSV */}
+            <button
+              onClick={handleExportCSV}
+              className="cimas-btn-dynamic px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-sm font-medium shadow-sm backdrop-blur-md"
+              title="Export filtered records to CSV"
+            >
+              <Download className="w-4 h-4 text-emerald-300" />
+              Export
+            </button>
+
+            {/* Refresh */}
+            <button
+              onClick={() => {
+                loadMembers();
+                loadSummary();
+              }}
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition backdrop-blur-md"
+              title="Refresh Directory"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+
+            {/* New Member Registration Button */}
+            {hasPermission("members:write") && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="cimas-btn-dynamic cimas-btn-dynamic--primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg"
+              >
+                <UserPlus className="w-4 h-4" />
+                Register Member
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Flash Notifications */}
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm flex items-center justify-between shadow-sm animate-fade-in">
+          <div className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 p-4 text-red-800 dark:text-red-300 text-sm flex items-center justify-between shadow-sm animate-scale-in">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <span>{error}</span>
@@ -664,7 +664,7 @@ export const MembersPage: React.FC = () => {
         )}
 
         {successMsg && (
-          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 text-sm flex items-center justify-between shadow-sm animate-fade-in">
+          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 p-4 text-emerald-800 dark:text-emerald-300 text-sm flex items-center justify-between shadow-sm animate-scale-in">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
               <span>{successMsg}</span>
@@ -675,95 +675,115 @@ export const MembersPage: React.FC = () => {
           </div>
         )}
 
-        {/* 2. SIX EXECUTIVE KPI METRIC CARDS */}
+        {/* 2. SIX EXECUTIVE KPI METRIC CARDS WITH SCSS HOVER LIFTS & GLOW */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Card 1: Total Members */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total Enrolled</span>
-              <Users className="w-4 h-4 text-indigo-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">Total Enrolled</span>
+              <div className="kpi-icon-wrap">
+                <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900">
+            <div className="kpi-value">
               {summaryLoading ? "..." : summary?.totalMembers ?? 0}
             </div>
-            <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-              <span className="text-emerald-600 font-semibold">100%</span> Single campus rule
+            <div className="kpi-footer">
+              <span className="kpi-trend-positive">100%</span> Single campus rule
             </div>
           </div>
 
           {/* Card 2: Active Fellowship */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Active Fellowship</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">Active Fellowship</span>
+              <div className="kpi-icon-wrap">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-emerald-600">
+            <div className="kpi-value text-emerald-600 dark:text-emerald-400">
               {summaryLoading ? "..." : summary?.activeMembers ?? 0}
             </div>
-            <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-              <span className="font-medium text-emerald-700">Ready for allocation</span>
+            <div className="kpi-footer">
+              <span className="kpi-trend-positive">Ready for allocation</span>
             </div>
           </div>
 
           {/* Card 3: Inactive & On Hold */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">On Hold / Inactive</span>
-              <Clock className="w-4 h-4 text-amber-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">On Hold / Inactive</span>
+              <div className="kpi-icon-wrap">
+                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-amber-600">
+            <div className="kpi-value text-amber-600 dark:text-amber-400">
               {summaryLoading ? "..." : (summary?.inactiveMembers ?? 0) + (summary?.onHoldMembers ?? 0)}
             </div>
-            <div className="mt-1 text-xs text-slate-500">Requires review</div>
+            <div className="kpi-footer">
+              <span className="kpi-trend-warning">Requires review</span>
+            </div>
           </div>
 
           {/* Card 4: Suspended & Archived */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Archived / Flagged</span>
-              <Archive className="w-4 h-4 text-rose-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">Archived / Flagged</span>
+              <div className="kpi-icon-wrap">
+                <Archive className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-rose-600">
+            <div className="kpi-value text-rose-600 dark:text-rose-400">
               {summaryLoading ? "..." : (summary?.archivedMembers ?? 0) + (summary?.suspendedMembers ?? 0)}
             </div>
-            <div className="mt-1 text-xs text-slate-500">Preserved in DB</div>
+            <div className="kpi-footer">
+              <span>Preserved in DB</span>
+            </div>
           </div>
 
           {/* Card 5: Data Completeness */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Data Quality</span>
-              <Activity className="w-4 h-4 text-blue-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">Data Quality</span>
+              <div className="kpi-icon-wrap">
+                <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-blue-600">
+            <div className="kpi-value text-blue-600 dark:text-blue-400">
               {summaryLoading ? "..." : `${summary?.completenessRate ?? 95}%`}
             </div>
-            <div className="mt-1 text-xs text-slate-500">Profile completeness</div>
+            <div className="kpi-footer">
+              <span>Profile completeness</span>
+            </div>
           </div>
 
           {/* Card 6: Students vs Non-Students */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Campus Students</span>
-              <GraduationCap className="w-4 h-4 text-purple-600" />
+          <div className="cimas-kpi-card">
+            <div className="kpi-header">
+              <span className="kpi-label">Campus Students</span>
+              <div className="kpi-icon-wrap">
+                <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-purple-600">
+            <div className="kpi-value text-purple-600 dark:text-purple-400">
               {summaryLoading ? "..." : summary?.categoryDistribution?.STUDENT ?? 0}
             </div>
-            <div className="mt-1 text-xs text-slate-500">Academic fellowship</div>
+            <div className="kpi-footer">
+              <span>Academic fellowship</span>
+            </div>
           </div>
         </div>
 
-        {/* 3. RECHARTS DEMOGRAPHIC VISUALIZATIONS */}
+        {/* 3. RECHARTS DEMOGRAPHIC VISUALIZATIONS WITH DYNAMIC GLASS CARDS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Chart 1: Category Distribution */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <div className="cimas-card cimas-card--primary p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <PieChartIcon className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <PieChartIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 Fellowship Demographic Breakdown
               </h3>
-              <span className="text-xs text-slate-500">By Member Category</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">By Member Category</span>
             </div>
             <div className="h-48 flex items-center justify-center">
               {categoryPieData.length > 0 ? (
@@ -793,13 +813,13 @@ export const MembersPage: React.FC = () => {
           </div>
 
           {/* Chart 2: Gender Distribution */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <div className="cimas-card cimas-card--emerald p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-blue-600" />
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 Gender Ratio & Spiritual Ministry
               </h3>
-              <span className="text-xs text-slate-500">Active Membership</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Active Membership</span>
             </div>
             <div className="h-48 flex items-center justify-center">
               {genderBarData.length > 0 ? (
@@ -808,7 +828,7 @@ export const MembersPage: React.FC = () => {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#6366F1" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="count" fill="#10B981" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -819,7 +839,7 @@ export const MembersPage: React.FC = () => {
         </div>
 
         {/* 4. ADVANCED FILTERING & SEARCH TOOLBAR */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div className="cimas-filter-toolbar space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             {/* Search Input */}
             <div className="lg:col-span-2 relative">
@@ -974,44 +994,44 @@ export const MembersPage: React.FC = () => {
           </div>
         )}
 
-        {/* 6. PRIMARY DATA TABLE */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+        {/* 6. PRIMARY DATA TABLE WITH DYNAMIC SCSS GLASS CONTAINER */}
+        <div className="cimas-table-container">
+          <div className="table-responsive">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 w-10 text-center">
-                    <button onClick={toggleSelectAll} className="text-slate-500 hover:text-slate-800">
+                <tr>
+                  <th className="w-10 text-center">
+                    <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-200">
                       {selectedIds.length > 0 && selectedIds.length === members.length ? (
-                        <CheckSquare className="w-4 h-4 text-indigo-600" />
+                        <CheckSquare className="w-4 h-4 text-indigo-500" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
                     </button>
                   </th>
-                  <th className="py-3.5 px-4">Member ID & Code</th>
-                  <th className="py-3.5 px-4">Full & Christian Name</th>
-                  <th className="py-3.5 px-4">Gender & Age</th>
-                  <th className="py-3.5 px-4">Academic Dept / Category</th>
-                  <th className="py-3.5 px-4">Spiritual Status</th>
-                  <th className="py-3.5 px-4">Contact</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th>Member ID & Code</th>
+                  <th>Full & Christian Name</th>
+                  <th>Gender & Age</th>
+                  <th>Academic Dept / Category</th>
+                  <th>Spiritual Status</th>
+                  <th>Contact</th>
+                  <th className="text-center">Status</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {loading ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-400">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
                       Loading member directory...
                     </td>
                   </tr>
                 ) : members.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-400">
-                      <Users className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                      <p className="font-semibold text-slate-700">No members found</p>
+                      <Users className="w-10 h-10 mx-auto mb-2 text-slate-400 animate-float" />
+                      <p className="font-semibold text-slate-700 dark:text-slate-300">No members found</p>
                       <p className="text-xs text-slate-400 mt-1">Try adjusting your filters or search term.</p>
                     </td>
                   </tr>
@@ -1021,18 +1041,16 @@ export const MembersPage: React.FC = () => {
                     return (
                       <tr
                         key={m.id}
-                        className={`hover:bg-indigo-50/40 transition ${
-                          isSelected ? "bg-indigo-50/60" : ""
-                        }`}
+                        className={isSelected ? "row-selected" : ""}
                       >
                         {/* Checkbox */}
-                        <td className="py-3.5 px-4 text-center">
+                        <td className="text-center">
                           <button
                             onClick={() => toggleSelectOne(m.id)}
-                            className="text-slate-400 hover:text-slate-700"
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                           >
                             {isSelected ? (
-                              <CheckSquare className="w-4 h-4 text-indigo-600" />
+                              <CheckSquare className="w-4 h-4 text-indigo-500" />
                             ) : (
                               <Square className="w-4 h-4" />
                             )}
@@ -1040,48 +1058,48 @@ export const MembersPage: React.FC = () => {
                         </td>
 
                         {/* Member ID Code */}
-                        <td className="py-3.5 px-4">
-                          <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                        <td>
+                          <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
                             {m.memberId}
                           </span>
                         </td>
 
                         {/* Full & Christian Name */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-slate-900">{m.fullName}</div>
+                        <td>
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">{m.fullName}</div>
                           {m.christianName && (
-                            <div className="text-xs text-amber-700 font-medium flex items-center gap-1">
-                              <Church className="w-3 h-3 text-amber-600" />
+                            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                              <Church className="w-3 h-3 text-amber-500" />
                               {m.christianName}
                             </div>
                           )}
                         </td>
 
                         {/* Gender & Age */}
-                        <td className="py-3.5 px-4 text-slate-600">
+                        <td className="text-slate-600 dark:text-slate-300">
                           <div>{m.gender}</div>
                           <div className="text-xs text-slate-400">{m.age ? `${m.age} yrs` : "N/A"}</div>
                         </td>
 
                         {/* Academic Dept / Category */}
-                        <td className="py-3.5 px-4">
-                          <div className="text-slate-800 font-medium">
+                        <td>
+                          <div className="text-slate-800 dark:text-slate-200 font-medium">
                             {m.academicDepartment || "Undeclared"}
                           </div>
-                          <span className="inline-block text-[11px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-100">
+                          <span className="inline-block text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-1.5 py-0.2 rounded border border-purple-200 dark:border-purple-800">
                             {m.category}
                           </span>
                         </td>
 
                         {/* Spiritual Status */}
-                        <td className="py-3.5 px-4">
+                        <td>
                           <span
                             className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
                               m.spiritualStatus === "DEACON"
-                                ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
                                 : m.spiritualStatus === "SERVANT"
-                                ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                : "bg-slate-100 text-slate-700"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700"
+                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             }`}
                           >
                             {m.spiritualStatus}
@@ -1089,7 +1107,7 @@ export const MembersPage: React.FC = () => {
                         </td>
 
                         {/* Contact */}
-                        <td className="py-3.5 px-4 text-xs text-slate-600 space-y-0.5">
+                        <td className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
                           {m.phoneNumber && (
                             <div className="flex items-center gap-1">
                               <Phone className="w-3 h-3 text-slate-400" />
@@ -1102,15 +1120,15 @@ export const MembersPage: React.FC = () => {
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-4 text-center">{getStatusBadge(m.status)}</td>
+                        <td className="text-center">{getStatusBadge(m.status)}</td>
 
                         {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             {/* View Profile Drawer */}
                             <button
                               onClick={() => setSelectedMember(m)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                               title="View Full Profile (360°)"
                             >
                               <Eye className="w-4 h-4" />
@@ -1120,7 +1138,7 @@ export const MembersPage: React.FC = () => {
                             {hasPermission("members:write") && (
                               <button
                                 onClick={() => openEditModal(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                                 title="Edit Member Profile"
                               >
                                 <Edit3 className="w-4 h-4" />
@@ -1131,7 +1149,7 @@ export const MembersPage: React.FC = () => {
                             {hasPermission("members:write") && (
                               <button
                                 onClick={() => openStatusModal(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 transition"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                                 title="Transition Member Status"
                               >
                                 <UserCheck className="w-4 h-4" />
@@ -1141,7 +1159,7 @@ export const MembersPage: React.FC = () => {
                             {/* Audit Trail Timeline */}
                             <button
                               onClick={() => openHistoryModal(m)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-slate-100 transition"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                               title="Audit History Timeline"
                             >
                               <History className="w-4 h-4" />
@@ -1151,7 +1169,7 @@ export const MembersPage: React.FC = () => {
                             {hasPermission("members:delete") && (
                               <button
                                 onClick={() => setDeletingMember(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-100 transition"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                                 title="Archive Member Record"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1168,7 +1186,7 @@ export const MembersPage: React.FC = () => {
           </div>
 
           {/* Pagination Footer */}
-          <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="table-pagination">
             <div>
               Showing {members.length} of {totalCount} total members (Page {page} of {totalPages || 1})
             </div>
@@ -1177,15 +1195,15 @@ export const MembersPage: React.FC = () => {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition flex items-center gap-1 font-medium"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1 font-medium"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> Previous
               </button>
-              <span className="font-semibold text-slate-700 px-2">{page}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200 px-2">{page}</span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition flex items-center gap-1 font-medium"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1 font-medium"
               >
                 Next <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -1195,13 +1213,13 @@ export const MembersPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          7. FIVE-SECTION REGISTRATION MODAL
+          7. FIVE-SECTION REGISTRATION MODAL WITH DYNAMIC SCSS GLASS
          ========================================================================= */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+        <div className="cimas-modal-overlay">
+          <div className="modal-dialog max-w-4xl">
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-900 text-white flex items-center justify-between">
+            <div className="modal-header">
               <div>
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <UserPlus className="w-5 h-5 text-indigo-400" />
@@ -1568,9 +1586,9 @@ export const MembersPage: React.FC = () => {
           8. EDIT MODAL (Rule 6: Member Code Immutable)
          ========================================================================= */}
       {editingMember && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+        <div className="cimas-modal-overlay">
+          <div className="modal-dialog max-w-3xl">
+            <div className="modal-header">
               <div>
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <Edit3 className="w-5 h-5 text-blue-400" />
@@ -1720,27 +1738,27 @@ export const MembersPage: React.FC = () => {
           9. STATUS TRANSITION MODAL (Rule 9: Mandatory Justification)
          ========================================================================= */}
       {statusTargetMember && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
-            <div className="flex items-center gap-3 mb-4 text-amber-600">
-              <UserCheck className="w-6 h-6" />
-              <h3 className="text-lg font-bold text-slate-900">Member Status Transition</h3>
+        <div className="cimas-modal-overlay">
+          <div className="modal-dialog max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4 text-amber-500">
+              <UserCheck className="w-6 h-6 animate-pulse-glow" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Member Status Transition</h3>
             </div>
 
-            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-              Updating status for <span className="font-semibold text-slate-900">{statusTargetMember.fullName}</span> ({statusTargetMember.memberId}). Current status:{" "}
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+              Updating status for <span className="font-semibold text-slate-900 dark:text-slate-100">{statusTargetMember.fullName}</span> ({statusTargetMember.memberId}). Current status:{" "}
               <span className="font-bold">{statusTargetMember.status}</span>.
             </p>
 
             <form onSubmit={handleStatusSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Target Status *
                 </label>
                 <select
                   value={targetStatus}
                   onChange={(e) => setTargetStatus(e.target.value as MemberStatus)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="INACTIVE">INACTIVE</option>
@@ -1751,7 +1769,7 @@ export const MembersPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Official Justification Reason * (Rule 9 Audit Requirement)
                 </label>
                 <textarea
@@ -1760,7 +1778,7 @@ export const MembersPage: React.FC = () => {
                   placeholder="Enter detailed reason for status change (stored in member_status_history audit log)..."
                   value={statusReason}
                   onChange={(e) => setStatusReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 ></textarea>
               </div>
 
@@ -1768,14 +1786,14 @@ export const MembersPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setStatusTargetMember(null)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || !statusReason.trim()}
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                  className="cimas-btn-dynamic cimas-btn-dynamic--gold px-5 py-2 rounded-xl text-sm font-semibold transition disabled:opacity-50"
                 >
                   {submitting ? "Updating..." : "Confirm Status Change"}
                 </button>
@@ -1789,9 +1807,9 @@ export const MembersPage: React.FC = () => {
           10. STATUS HISTORY AUDIT TIMELINE MODAL
          ========================================================================= */}
       {historyTargetMember && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+        <div className="cimas-modal-overlay">
+          <div className="modal-dialog max-w-lg">
+            <div className="modal-header">
               <div>
                 <h3 className="text-base font-bold flex items-center gap-2">
                   <History className="w-5 h-5 text-indigo-400" />
@@ -1812,7 +1830,7 @@ export const MembersPage: React.FC = () => {
             <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {historyLoading ? (
                 <div className="py-8 text-center text-slate-400">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
                   Loading audit logs...
                 </div>
               ) : historyList.length === 0 ? (
@@ -1820,30 +1838,36 @@ export const MembersPage: React.FC = () => {
                   No status transition history recorded for this member.
                 </div>
               ) : (
-                <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                  {historyList.map((item) => (
-                    <div key={item.id} className="relative">
-                      <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow"></div>
-                      <div className="text-xs text-slate-400 mb-1">
-                        {new Date(item.changedAt).toLocaleString()}
+                <div className="page-audit">
+                  <div className="audit-timeline">
+                    {historyList.map((item) => (
+                      <div key={item.id} className="timeline-node">
+                        <div className="node-marker">
+                          <Clock className="w-3 h-3 text-indigo-400" />
+                        </div>
+                        <div className="node-card">
+                          <div className="text-xs text-slate-400 mb-1">
+                            {new Date(item.changedAt).toLocaleString()}
+                          </div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <span className="font-mono text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
+                              {item.oldStatus}
+                            </span>
+                            <span>→</span>
+                            <span className="font-mono text-xs px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/80 rounded text-indigo-700 dark:text-indigo-300 font-bold">
+                              {item.newStatus}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800 italic">
+                            "{item.reason}"
+                          </p>
+                          <div className="mt-1 text-[11px] text-slate-400">
+                            Authorized by: <span className="font-medium text-slate-600 dark:text-slate-300">{item.changedByName}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                        <span className="font-mono text-xs px-2 py-0.5 bg-slate-100 rounded text-slate-600">
-                          {item.oldStatus}
-                        </span>
-                        <span>→</span>
-                        <span className="font-mono text-xs px-2 py-0.5 bg-indigo-100 rounded text-indigo-800 font-bold">
-                          {item.newStatus}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 italic">
-                        "{item.reason}"
-                      </p>
-                      <div className="mt-1 text-[11px] text-slate-400">
-                        Authorized by: <span className="font-medium text-slate-600">{item.changedByName}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1855,10 +1879,10 @@ export const MembersPage: React.FC = () => {
           11. 360-DEGREE MEMBER DETAIL DRAWER
          ========================================================================= */}
       {selectedMember && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col overflow-hidden animate-slide-left">
+        <div className="cimas-drawer-overlay">
+          <div className="drawer-panel">
             {/* Drawer Header */}
-            <div className="p-6 bg-gradient-to-r from-slate-900 to-indigo-900 text-white flex items-center justify-between">
+            <div className="modal-header">
               <div>
                 <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-500/30 border border-indigo-400/30 rounded text-indigo-200">
                   {selectedMember.memberId}
@@ -1879,7 +1903,7 @@ export const MembersPage: React.FC = () => {
             </div>
 
             {/* Drawer Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm">
+            <div className="drawer-body space-y-6 text-sm">
               {/* Status & Category Pills */}
               <div className="flex items-center gap-2">
                 {getStatusBadge(selectedMember.status)}

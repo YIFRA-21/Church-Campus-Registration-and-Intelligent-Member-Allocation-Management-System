@@ -1,0 +1,111 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: MIXINS & UTILITIES
+// ============================================================================
+@use "variables" as *;
+
+// --- Glassmorphism Container ---
+@mixin glass-panel($bg-opacity: 0.85, $blur: 16px) {
+  background: rgba($color-obsidian, $bg-opacity);
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  html:not(.dark) & {
+    background: rgba($color-surface-light, $bg-opacity + 0.1);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+  }
+}
+
+// --- Dynamic Hover Lift Effect ---
+@mixin hover-lift($translate-y: -4px, $scale: 1.008) {
+  transition: transform $transition-slow, box-shadow $transition-slow, border-color $transition-fast;
+  will-change: transform, box-shadow;
+
+  &:hover {
+    transform: translateY($translate-y) scale($scale);
+    box-shadow: $shadow-xl;
+  }
+}
+
+// --- Dynamic Neon Border Glow ---
+@mixin neon-border($color: $color-primary-500, $glow-radius: 18px) {
+  position: relative;
+  border-color: rgba($color, 0.4);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: 0 0 $glow-radius rgba($color, 0.25);
+    opacity: 0;
+    transition: opacity $transition-base;
+    pointer-events: none;
+  }
+
+  &:hover::after,
+  &:focus-within::after {
+    opacity: 1;
+  }
+}
+
+// --- Animated Shimmer Overlay ---
+@mixin shimmer-effect {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: $grad-shimmer;
+    animation: shimmer 2.5s infinite;
+    pointer-events: none;
+  }
+}
+
+// --- Gradient Text ---
+@mixin gradient-text($gradient: $grad-accent-primary) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+// --- Custom Sleek Scrollbar ---
+@mixin custom-scrollbar($width: 6px, $track-color: transparent, $thumb-color: rgba(148, 163, 184, 0.25)) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: $radius-full;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.5);
+    }
+  }
+}
+
+// --- Flex Alignment Helpers ---
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

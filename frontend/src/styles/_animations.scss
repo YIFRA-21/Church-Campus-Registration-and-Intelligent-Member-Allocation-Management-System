@@ -1,0 +1,127 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: DYNAMIC KEYFRAME ANIMATIONS
+// ============================================================================
+@use "variables" as *;
+
+// --- Shimmer Highlight ---
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// --- Smooth Ambient Float ---
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+// --- Radiant Pulse Glow ---
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba($color-primary-500, 0.4));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 20px rgba($color-primary-500, 0.7));
+  }
+}
+
+// --- Radar Ping (Status active beacons) ---
+@keyframes radarPing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+// --- Dynamic Gradient Wave for Hero Banners ---
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// --- Smooth Entrance Scale ---
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// --- Slide in from Bottom ---
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// --- Rotating Ambient Rings ---
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// --- Utility Animation Classes ---
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s $ease-spring forwards;
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.4s $ease-spring forwards;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 20s linear infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 10s ease infinite;
+}

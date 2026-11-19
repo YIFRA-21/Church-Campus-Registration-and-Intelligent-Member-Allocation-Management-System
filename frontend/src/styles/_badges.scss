@@ -1,0 +1,139 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: DYNAMIC STATUS BADGES & TAGS
+// ============================================================================
+@use "variables" as *;
+@use "mixins" as *;
+
+.cimas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: all $transition-fast;
+
+  // Radar ping dot
+  .badge-ping-wrap {
+    position: relative;
+    display: flex;
+    width: 0.5rem;
+    height: 0.5rem;
+
+    .badge-ping {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: $radius-full;
+      animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      opacity: 0.75;
+    }
+
+    .badge-dot {
+      position: relative;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: $radius-full;
+    }
+  }
+
+  // --- Variant: ACTIVE (Emerald) ---
+  &--active {
+    background: rgba($status-active, 0.12);
+    color: #34d399;
+    border: 1px solid rgba($status-active, 0.3);
+
+    .badge-ping {
+      background: $status-active;
+    }
+    .badge-dot {
+      background: $status-active;
+    }
+
+    html:not(.dark) & {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+  }
+
+  // --- Variant: INACTIVE (Amber) ---
+  &--inactive {
+    background: rgba($status-inactive, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba($status-inactive, 0.3);
+
+    .badge-ping {
+      background: $status-inactive;
+    }
+    .badge-dot {
+      background: $status-inactive;
+    }
+
+    html:not(.dark) & {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+  }
+
+  // --- Variant: SUSPENDED (Rose) ---
+  &--suspended {
+    background: rgba($status-suspended, 0.12);
+    color: #f87171;
+    border: 1px solid rgba($status-suspended, 0.3);
+
+    .badge-ping {
+      background: $status-suspended;
+    }
+    .badge-dot {
+      background: $status-suspended;
+    }
+
+    html:not(.dark) & {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+  }
+
+  // --- Variant: ON_HOLD (Indigo) ---
+  &--on-hold {
+    background: rgba($status-on-hold, 0.12);
+    color: #818cf8;
+    border: 1px solid rgba($status-on-hold, 0.3);
+
+    .badge-ping {
+      background: $status-on-hold;
+    }
+    .badge-dot {
+      background: $status-on-hold;
+    }
+
+    html:not(.dark) & {
+      background: #eef2ff;
+      color: #3730a3;
+      border-color: #c7d2fe;
+    }
+  }
+
+  // --- Variant: ARCHIVED (Slate) ---
+  &--archived {
+    background: rgba($status-archived, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba($status-archived, 0.25);
+
+    .badge-dot {
+      background: $status-archived;
+    }
+
+    html:not(.dark) & {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+  }
+}

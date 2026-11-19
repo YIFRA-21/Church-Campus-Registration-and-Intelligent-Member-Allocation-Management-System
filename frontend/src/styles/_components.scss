@@ -1,0 +1,247 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: DYNAMIC UI COMPONENTS
+// ============================================================================
+@use "variables" as *;
+@use "mixins" as *;
+
+// --- 1. Dynamic Filter & Search Toolbar ---
+.cimas-filter-toolbar {
+  @include glass-panel(0.9, 12px);
+  border-radius: $radius-2xl;
+  padding: 1rem 1.25rem;
+  box-shadow: $shadow-sm;
+  transition: box-shadow $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+
+  .search-input-wrap {
+    position: relative;
+    width: 100%;
+
+    .search-icon {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+      transition: color $transition-fast;
+    }
+
+    input {
+      width: 100%;
+      padding-left: 2.5rem;
+      padding-right: 1rem;
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
+      font-size: 0.875rem;
+      border-radius: $radius-xl;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      transition: all $transition-fast;
+
+      html:not(.dark) & {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+      }
+
+      &:focus {
+        background: rgba(255, 255, 255, 0.08);
+
+        html:not(.dark) & {
+          background: #ffffff;
+        }
+
+        & + .search-icon {
+          color: $color-primary-400;
+        }
+      }
+    }
+  }
+
+  select {
+    padding: 0.625rem 2rem 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    border-radius: $radius-xl;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    transition: all $transition-fast;
+
+    html:not(.dark) & {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+  }
+}
+
+// --- 2. Dynamic Sliding Tabs ---
+.cimas-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border-radius: $radius-xl;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  html:not(.dark) & {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+
+  .tab-item {
+    padding: 0.5rem 1.25rem;
+    border-radius: $radius-lg;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all $transition-fast;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    html:not(.dark) & {
+      color: #64748b;
+    }
+
+    &:hover {
+      color: #f8fafc;
+
+      html:not(.dark) & {
+        color: #0f172a;
+      }
+    }
+
+    &.tab-active {
+      color: #ffffff;
+      background: $color-primary-600;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+
+      html:not(.dark) & {
+        color: #ffffff;
+        background: #1e3a8a;
+      }
+    }
+  }
+}
+
+// --- 3. Dynamic Progress Bars with Animated Sheen ---
+.cimas-progress {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+
+  html:not(.dark) & {
+    background: #e2e8f0;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: $radius-full;
+    transition: width 0.8s $ease-spring;
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size: 1rem 1rem;
+      animation: progressStripes 1s linear infinite;
+    }
+
+    &--primary {
+      background: $grad-accent-primary;
+    }
+
+    &--emerald {
+      background: $grad-accent-emerald;
+    }
+
+    &--amber {
+      background: $grad-accent-gold;
+    }
+
+    &--rose {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    }
+  }
+}
+
+@keyframes progressStripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 1rem 0;
+  }
+}
+
+// --- 4. Interactive Empty State ---
+.cimas-empty-state {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  color: #94a3b8;
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.25rem;
+    border-radius: $radius-2xl;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    @include flex-center;
+    color: #64748b;
+    animation: float 5s ease-in-out infinite;
+
+    html:not(.dark) & {
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+    }
+  }
+
+  .empty-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 0.35rem;
+
+    html:not(.dark) & {
+      color: #0f172a;
+    }
+  }
+
+  .empty-desc {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    max-width: 24rem;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+}

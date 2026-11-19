@@ -1,0 +1,273 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: PAGE-SPECIFIC DYNAMICS
+// ============================================================================
+@use "variables" as *;
+@use "mixins" as *;
+
+// ----------------------------------------------------------------------------
+// 1. AUTH / LOGIN PAGE
+// ----------------------------------------------------------------------------
+.page-login {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 20%, #1e293b 0%, #0f172a 45%, #070b13 100%);
+  position: relative;
+  overflow: hidden;
+  @include flex-center;
+  padding: 1.5rem;
+
+  // Floating background ambient orbs
+  .login-glow-orb {
+    position: absolute;
+    width: 450px;
+    height: 450px;
+    border-radius: $radius-full;
+    filter: blur(100px);
+    opacity: 0.25;
+    pointer-events: none;
+
+    &--indigo {
+      top: 10%;
+      left: 15%;
+      background: #4f46e5;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    &--blue {
+      bottom: 10%;
+      right: 15%;
+      background: #2563eb;
+      animation: float 7s ease-in-out infinite reverse;
+    }
+  }
+
+  .login-card {
+    @include glass-panel(0.9, 20px);
+    border-radius: $radius-2xl;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 28rem;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    animation: scaleIn 0.35s $ease-spring;
+
+    .login-logo-wrap {
+      @include flex-center;
+      flex-direction: column;
+      margin-bottom: 2rem;
+      text-align: center;
+
+      .logo-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: $radius-xl;
+        background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+        @include flex-center;
+        color: #ffffff;
+        box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.5);
+        margin-bottom: 0.75rem;
+        animation: pulseGlow 4s infinite;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 2. DASHBOARD PAGE
+// ----------------------------------------------------------------------------
+.page-dashboard {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .quick-action-button {
+    @include glass-panel(0.9, 12px);
+    @include hover-lift(-3px, 1.02);
+    border-radius: $radius-xl;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    .action-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: $radius-lg;
+      @include flex-center;
+      background: rgba($color-primary-500, 0.15);
+      color: $color-primary-400;
+      transition: transform $transition-fast;
+    }
+
+    &:hover .action-icon {
+      transform: scale(1.1) rotate(5deg);
+      background: rgba($color-primary-500, 0.25);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3. EXCEL IMPORT & VALIDATION PIPELINE
+// ----------------------------------------------------------------------------
+.page-import {
+  .import-dropzone {
+    border: 2px dashed rgba(99, 102, 241, 0.4);
+    border-radius: $radius-2xl;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all $transition-base;
+    background: rgba($color-primary-500, 0.03);
+    cursor: pointer;
+
+    &:hover,
+    &.dropzone-active {
+      border-color: $color-primary-500;
+      background: rgba($color-primary-500, 0.08);
+      transform: scale(1.01);
+    }
+
+    .dropzone-icon {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1rem;
+      border-radius: $radius-full;
+      background: rgba($color-primary-500, 0.12);
+      @include flex-center;
+      color: $color-primary-400;
+      animation: float 4s ease-in-out infinite;
+    }
+  }
+
+  .validation-summary-card {
+    border-radius: $radius-xl;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+    background: rgba($color-surface-dark, 0.8);
+    border: 1px solid $color-surface-border-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 4. ALLOCATION ENGINE & EXCEPTION MANAGEMENT
+// ----------------------------------------------------------------------------
+.page-allocation {
+  .allocation-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 2rem;
+      right: 2rem;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 2;
+      background: $color-midnight;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .step-circle {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: $radius-full;
+        @include flex-center;
+        font-weight: 700;
+        font-size: 0.875rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: #94a3b8;
+        background: $color-obsidian;
+        transition: all $transition-base;
+      }
+
+      &.step-active .step-circle {
+        border-color: $color-primary-500;
+        color: #ffffff;
+        background: $color-primary-600;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+      }
+
+      &.step-completed .step-circle {
+        border-color: $status-active;
+        color: #ffffff;
+        background: $status-active;
+      }
+    }
+  }
+
+  .exception-alert-banner {
+    background: rgba($color-rose-accent, 0.1);
+    border: 1px solid rgba($color-rose-accent, 0.3);
+    border-radius: $radius-xl;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #fca5a5;
+    margin-bottom: 1.5rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 5. AUDIT TIMELINE
+// ----------------------------------------------------------------------------
+.page-audit {
+  .audit-timeline {
+    position: relative;
+    padding-left: 2rem;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0.75rem;
+      top: 0.5rem;
+      bottom: 0.5rem;
+      width: 2px;
+      background: linear-gradient(180deg, $color-primary-500 0%, $color-cyan-accent 100%);
+    }
+
+    .timeline-node {
+      position: relative;
+      margin-bottom: 2rem;
+
+      .node-marker {
+        position: absolute;
+        left: -2rem;
+        top: 0.25rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: $radius-full;
+        background: $color-obsidian;
+        border: 2px solid $color-primary-500;
+        @include flex-center;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+      }
+
+      .node-card {
+        @include glass-panel(0.9, 12px);
+        border-radius: $radius-xl;
+        padding: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+}
