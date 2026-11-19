@@ -130,6 +130,7 @@ export const AuditLogPage: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
               <tr>
+                <th className="px-4 py-3 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                 <th className="px-4 py-3">Timestamp</th>
                 <th className="px-4 py-3">Action Event</th>
                 <th className="px-4 py-3">Actor</th>
@@ -140,19 +141,22 @@ export const AuditLogPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100 font-sans">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                  <td colSpan={6} className="py-8 text-center text-slate-400">
                     Loading security ledger...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                  <td colSpan={6} className="py-8 text-center text-slate-500">
                     No matching audit records found.
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
+                logs.map((log, idx) => (
                   <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-4 py-3 text-center font-mono font-bold text-slate-400">
+                      {idx + 1}
+                    </td>
                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono text-[11px]">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />

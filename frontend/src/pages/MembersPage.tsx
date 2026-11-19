@@ -144,6 +144,7 @@ export const MembersPage: React.FC = () => {
     phoneNumber: "",
     email: "",
     academicDepartment: "",
+    serviceDepartment: "",
     originRegion: "አዲስ አበባ",
     zone: "",
     woreda: "",
@@ -264,6 +265,7 @@ export const MembersPage: React.FC = () => {
         phoneNumber: "",
         email: "",
         academicDepartment: "",
+        serviceDepartment: "",
         originRegion: "አዲስ አበባ",
         zone: "",
         woreda: "",
@@ -302,6 +304,7 @@ export const MembersPage: React.FC = () => {
       phoneNumber: member.phoneNumber || "",
       email: member.email || "",
       academicDepartment: member.academicDepartment || "",
+      serviceDepartment: member.serviceDepartment || "",
       originRegion: member.originRegion || "አዲስ አበባ",
       zone: member.zone || "",
       woreda: member.woreda || "",
@@ -1069,9 +1072,11 @@ export const MembersPage: React.FC = () => {
                       )}
                     </button>
                   </th>
+                  <th className="w-12 text-center text-xs font-bold text-cyan-400">ተ.ቁ</th>
                   <th>Member ID & Code</th>
                   <th>Full & Christian Name</th>
                   <th>Gender & Age</th>
+                  <th>የአገልግሎት ክፍል</th>
                   <th>Academic Dept / Category</th>
                   <th>Spiritual Status</th>
                   <th>Contact</th>
@@ -1082,21 +1087,21 @@ export const MembersPage: React.FC = () => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={11} className="py-12 text-center text-slate-400">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
                       Loading member directory...
                     </td>
                   </tr>
                 ) : members.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={11} className="py-12 text-center text-slate-400">
                       <Users className="w-10 h-10 mx-auto mb-2 text-slate-400 animate-float" />
                       <p className="font-semibold text-slate-700 dark:text-slate-300">No members found</p>
                       <p className="text-xs text-slate-400 mt-1">Try adjusting your filters or search term.</p>
                     </td>
                   </tr>
                 ) : (
-                  members.map((m) => {
+                  members.map((m, index) => {
                     const isSelected = selectedIds.includes(m.id);
                     return (
                       <tr
@@ -1115,6 +1120,11 @@ export const MembersPage: React.FC = () => {
                               <Square className="w-4 h-4" />
                             )}
                           </button>
+                        </td>
+
+                        {/* ተ.ቁ (Serial / Row Number) matching user screenshot */}
+                        <td className="text-center font-mono text-xs font-bold text-slate-400">
+                          {(page - 1) * 10 + index + 1}
                         </td>
 
                         {/* Member ID Code */}
@@ -1139,6 +1149,14 @@ export const MembersPage: React.FC = () => {
                         <td className="text-slate-600 dark:text-slate-300">
                           <div>{m.gender}</div>
                           <div className="text-xs text-slate-400">{m.age ? `${m.age} yrs` : "N/A"}</div>
+                        </td>
+
+                        {/* የአገልግሎት ክፍል (Ministry Service Department) */}
+                        <td>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-950/60 text-indigo-300 border border-indigo-800/80">
+                            <Layers className="w-3 h-3 text-indigo-400" />
+                            {m.serviceDepartment || "ያልተመደበ"}
+                          </span>
                         </td>
 
                         {/* Academic Dept / Category */}
@@ -1302,9 +1320,9 @@ export const MembersPage: React.FC = () => {
               {/* SECTION 1: Campus & Academic Identity */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4" /> Section 1: Campus & Academic Identification
+                  <Building2 className="w-4 h-4" /> Section 1: Campus & Department Identification
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Church Campus *
@@ -1324,9 +1342,34 @@ export const MembersPage: React.FC = () => {
                     </select>
                   </div>
 
+                  {/* የአገልግሎት ክፍል (Ministry Service Department) matching screenshot exactly */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Academic Department *
+                      የአገልግሎት ክፍል ይምረጡ *
+                    </label>
+                    <select
+                      required
+                      value={formData.serviceDepartment || ""}
+                      onChange={(e) => setFormData({ ...formData, serviceDepartment: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium"
+                    >
+                      <option value="">ምረጥ...</option>
+                      <option value="ዕቅድ">ዕቅድ</option>
+                      <option value="ትምህርት">ትምህርት</option>
+                      <option value="ልማት">ልማት</option>
+                      <option value="ባች">ባች</option>
+                      <option value="ሙያ">ሙያ</option>
+                      <option value="ቋንቋ">ቋንቋ</option>
+                      <option value="አባላት">አባላት</option>
+                      <option value="ኦዲት">ኦዲት</option>
+                      <option value="ሂሳብ">ሂሳብ</option>
+                      <option value="መዝሙር">መዝሙር</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      የትምህርት ክፍል (Academic Dept) *
                     </label>
                     <input
                       type="text"
@@ -1711,7 +1754,30 @@ export const MembersPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Academic Department</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    የአገልግሎት ክፍል ይምረጡ *
+                  </label>
+                  <select
+                    value={editFormData.serviceDepartment || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, serviceDepartment: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium"
+                  >
+                    <option value="">ምረጥ...</option>
+                    <option value="ዕቅድ">ዕቅድ</option>
+                    <option value="ትምህርት">ትምህርት</option>
+                    <option value="ልማት">ልማት</option>
+                    <option value="ባች">ባች</option>
+                    <option value="ሙያ">ሙያ</option>
+                    <option value="ቋንቋ">ቋንቋ</option>
+                    <option value="አባላት">አባላት</option>
+                    <option value="ኦዲት">ኦዲት</option>
+                    <option value="ሂሳብ">ሂሳብ</option>
+                    <option value="መዝሙር">መዝሙር</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Academic Department (የትምህርት ክፍል)</label>
                   <input
                     type="text"
                     value={editFormData.academicDepartment || ""}
@@ -1984,7 +2050,13 @@ export const MembersPage: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-400 block">Academic Department</span>
+                  <span className="text-xs text-slate-400 block">የአገልግሎት ክፍል (Ministry)</span>
+                  <span className="font-semibold text-indigo-700 dark:text-indigo-400">
+                    {selectedMember.serviceDepartment || "ያልተመደበ"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Academic Department (የትምህርት ክፍል)</span>
                   <span className="font-semibold text-slate-800">
                     {selectedMember.academicDepartment || "Undeclared"}
                   </span>

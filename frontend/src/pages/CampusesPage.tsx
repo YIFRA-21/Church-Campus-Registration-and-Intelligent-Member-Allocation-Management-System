@@ -579,6 +579,7 @@ export const CampusesPage: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
             <thead className="bg-slate-50/90 dark:bg-[#060a12]/90 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
+                <th className="py-3.5 px-4 w-12 text-center text-cyan-500 font-bold">ተ.ቁ</th>
                 <th className="py-3.5 px-4">Campus Identity</th>
                 <th className="py-3.5 px-4">Code</th>
                 <th className="py-3.5 px-4">Location / Diocese</th>
@@ -620,7 +621,7 @@ export const CampusesPage: React.FC = () => {
               ) : campuses.length === 0 ? (
                 // Empty State
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={8} className="py-16 text-center text-slate-500 dark:text-slate-400">
                     <Building2 className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No campuses found</p>
                     <p className="text-xs text-slate-500 mt-1">
@@ -631,13 +632,18 @@ export const CampusesPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                campuses.map((campus) => {
+                campuses.map((campus, idx) => {
                   const primaryContact = campus.contacts?.find((c) => c.isPrimary);
                   return (
                     <tr
                       key={campus.id}
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition group"
                     >
+                      {/* ተ.ቁ */}
+                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
+                        {idx + 1}
+                      </td>
+
                       {/* Identity */}
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">

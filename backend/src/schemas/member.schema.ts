@@ -46,6 +46,7 @@ export const CreateMemberSchema = z.object({
     }),
   email: z.string().email("Valid email required").optional().or(z.literal("")),
   academicDepartment: z.string().optional().default(""),
+  serviceDepartment: z.string().optional().default(""),
   originRegion: z.string().optional().default(""),
   zone: z.string().optional().default(""),
   woreda: z.string().optional().default(""),

@@ -1117,6 +1117,7 @@ export const DashboardPage: React.FC = () => {
                     <table className="w-full text-left text-xs text-slate-600 whitespace-nowrap">
                       <thead className="bg-[#0d5b61] text-white uppercase font-bold text-[11px]">
                         <tr>
+                          <th className="px-4 py-3.5 w-12 text-center text-cyan-200">ተ.ቁ</th>
                           <th className="px-4 py-3.5">Code (ኮድ)</th>
                           <th className="px-4 py-3.5">Department Name (የክፍል ስም)</th>
                           <th className="px-3 py-3.5 text-center">Target Share (ምጣኔ)</th>
@@ -1133,6 +1134,9 @@ export const DashboardPage: React.FC = () => {
                               idx % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                             }`}
                           >
+                            <td className="px-4 py-3.5 text-center font-mono font-bold text-slate-400">
+                              {idx + 1}
+                            </td>
                             <td className="px-4 py-3.5 font-mono font-bold text-navy-800">
                               <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
                                 {dept.code}

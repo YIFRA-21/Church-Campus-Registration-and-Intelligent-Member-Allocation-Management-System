@@ -75,6 +75,7 @@ export interface StagedMemberData {
   phoneNumber?: string;
   email?: string;
   academicDepartment?: string;
+  serviceDepartment?: string;
   originRegion?: string;
   zone?: string;
   woreda?: string;
@@ -203,6 +204,7 @@ export class ImportService {
     gender: ["gender", "sex", "ጾታ"],
     phone: ["phone", "phone number", "phone_number", "mobile", "ስልክ", "ስልክ ቁጥር", "ተንቀሳቃሽ"],
     source_department_name: ["department", "academic department", "source_department_name", "faculty", "ዲፓርትመንት", "የትምህርት ክፍል"],
+    service_department: ["service department", "service_department", "ministry", "fellowship department", "የአገልግሎት ክፍል", "አገልግሎት ክፍል", "የአገልግሎት ዘርፍ"],
     region: ["region", "origin region", "origin_region", "ክልል", "የትውልድ ክልል"],
     zone: ["zone", "ዞን"],
     woreda: ["woreda", "ወረዳ"],
@@ -541,6 +543,9 @@ export class ImportService {
             break;
           case "source_department_name":
             normalized.academicDepartment = val;
+            break;
+          case "service_department":
+            normalized.serviceDepartment = val;
             break;
           case "region":
             normalized.originRegion = val;
@@ -1030,6 +1035,7 @@ export class ImportService {
               phoneNumber: row.normalizedData.phoneNumber || "",
               email: row.normalizedData.email || "",
               academicDepartment: row.normalizedData.academicDepartment || "",
+              serviceDepartment: row.normalizedData.serviceDepartment || "",
               originRegion: row.normalizedData.originRegion || "",
               zone: row.normalizedData.zone || "",
               woreda: row.normalizedData.woreda || "",

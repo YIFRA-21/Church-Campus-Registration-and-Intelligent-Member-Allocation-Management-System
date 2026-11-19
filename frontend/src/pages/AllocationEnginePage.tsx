@@ -319,6 +319,7 @@ export const AllocationEnginePage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-semibold">
                   <tr>
+                    <th className="px-4 py-3 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                     <th className="px-4 py-3">Department</th>
                     <th className="px-4 py-3">Target %</th>
                     <th className="px-4 py-3">Target Quota</th>
@@ -328,10 +329,13 @@ export const AllocationEnginePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {selectedBatch.targets.map((t) => {
+                  {selectedBatch.targets.map((t, idx) => {
                     const pctAchieved = t.targetCount > 0 ? Math.round((t.allocatedCount / t.targetCount) * 100) : 0;
                     return (
                       <tr key={t.departmentId} className="hover:bg-slate-50/80">
+                        <td className="px-4 py-3 text-center font-mono font-bold text-slate-400">
+                          {idx + 1}
+                        </td>
                         <td className="px-4 py-3 font-bold text-slate-900">
                           <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-900 font-bold mr-2 border border-blue-200">
                             {t.departmentCode}
@@ -418,6 +422,7 @@ export const AllocationEnginePage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-semibold sticky top-0">
                   <tr>
+                    <th className="px-4 py-2.5 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                     <th className="px-4 py-2.5">Member ID</th>
                     <th className="px-4 py-2.5">Full Name</th>
                     <th className="px-4 py-2.5">Gender</th>
@@ -427,8 +432,11 @@ export const AllocationEnginePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {allocations.map((a) => (
+                  {allocations.map((a, idx) => (
                     <tr key={a.id} className="hover:bg-slate-50/80">
+                      <td className="px-4 py-2.5 text-center font-mono font-bold text-slate-400">
+                        {idx + 1}
+                      </td>
                       <td className="px-4 py-2.5 font-mono font-bold text-blue-900">{a.memberCode}</td>
                       <td className="px-4 py-2.5 font-bold text-slate-900">{a.memberName}</td>
                       <td className="px-4 py-2.5 text-slate-600">{a.gender}</td>

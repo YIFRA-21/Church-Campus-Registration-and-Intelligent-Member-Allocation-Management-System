@@ -175,6 +175,7 @@ export const ReportsPage: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50/50 text-slate-500 uppercase font-semibold border-b border-slate-200">
               <tr>
+                <th className="px-4 py-3 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Department Name</th>
                 <th className="px-3 py-3 text-center">Target %</th>
@@ -189,19 +190,22 @@ export const ReportsPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                  <td colSpan={10} className="py-8 text-center text-slate-400">
                     Loading report...
                   </td>
                 </tr>
               ) : !distReport || distReport.departments.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-500">
+                  <td colSpan={10} className="py-8 text-center text-slate-500">
                     No departments found for this campus.
                   </td>
                 </tr>
               ) : (
-                distReport.departments.map((dept) => (
+                distReport.departments.map((dept, idx) => (
                   <tr key={dept.departmentId} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-4 py-3 text-center font-mono font-bold text-slate-400">
+                      {idx + 1}
+                    </td>
                     <td className="px-4 py-3 font-mono font-bold text-navy-800">{dept.code}</td>
                     <td className="px-4 py-3 font-semibold text-slate-800">{dept.name}</td>
                     <td className="px-3 py-3 text-center font-bold text-blue-700">
@@ -376,6 +380,7 @@ export const ReportsPage: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50/50 text-slate-500 uppercase font-semibold border-b border-slate-200">
               <tr>
+                <th className="px-4 py-3 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                 <th className="px-4 py-3">Evaluator</th>
                 <th className="px-4 py-3">Email Address</th>
                 <th className="px-3 py-3 text-center">Assigned Tasks</th>
@@ -389,13 +394,16 @@ export const ReportsPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {evaluatorReport.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-slate-400">
+                  <td colSpan={9} className="py-6 text-center text-slate-400">
                     No active evaluators found.
                   </td>
                 </tr>
               ) : (
-                evaluatorReport.map((ev) => (
+                evaluatorReport.map((ev, idx) => (
                   <tr key={ev.evaluatorId} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-4 py-3 text-center font-mono font-bold text-slate-400">
+                      {idx + 1}
+                    </td>
                     <td className="px-4 py-3 font-semibold text-slate-900">{ev.fullName}</td>
                     <td className="px-4 py-3 font-mono text-slate-500">{ev.email}</td>
                     <td className="px-3 py-3 text-center font-mono font-bold text-slate-800">

@@ -15,6 +15,7 @@ export interface Member {
   phoneNumber: string;
   email: string;
   academicDepartment?: string;
+  serviceDepartment?: string;
   originRegion?: string;
   zone?: string;
   woreda?: string;
@@ -79,6 +80,7 @@ export interface CreateMemberPayload {
   phoneNumber?: string;
   email?: string;
   academicDepartment?: string;
+  serviceDepartment?: string;
   originRegion?: string;
   zone?: string;
   woreda?: string;

@@ -36,6 +36,7 @@ export interface MemberRecord {
   phoneNumber: string; // ስልክ ቁጥር
   email: string;
   academicDepartment?: string; // ዲፓርትመንት (Academic Department / Faculty / Source)
+  serviceDepartment?: string; // የአገልግሎት ክፍል (Ministry Department: ዕቅድ፣ ትምህርት፣ ልማት፣ ባች፣ ሙያ፣ ቋንቋ፣ አባላት፣ ኦዲት፣ ሂሳብ፣ መዝሙር)
   originRegion?: string; // የመጡበት ክልል (Origin Region)
   zone?: string; // ዞን
   woreda?: string; // ወረዳ
@@ -90,6 +91,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Arat Kilo, Addis Ababa",
     emergencyContact: "+251911998877",
     status: "ACTIVE",
+    serviceDepartment: "መዝሙር",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000001", // CHOIR-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -123,6 +125,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Piazza, Addis Ababa",
     emergencyContact: "+251922112233",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -156,6 +159,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Sidist Kilo, Addis Ababa",
     emergencyContact: "+251933556677",
     status: "ACTIVE",
+    serviceDepartment: "ዕቅድ",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000004", // EVANG-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -189,6 +193,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Bole Medhanealem",
     emergencyContact: "+251944112233",
     status: "ACTIVE",
+    serviceDepartment: "ልማት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000003", // PRAY-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -222,6 +227,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Gullele, Addis Ababa",
     emergencyContact: "+251955990011",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -255,6 +261,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Arat Kilo Campus",
     emergencyContact: "+251966112233",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -321,6 +328,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Yared School Campus",
     emergencyContact: "+251988223344",
     status: "ACTIVE",
+    serviceDepartment: "መዝሙር",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000001", // CHOIR-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -354,6 +362,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Female Dormitory",
     emergencyContact: "+251912340001",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -387,6 +396,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Engineering Block",
     emergencyContact: "+251923450002",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -420,6 +430,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Social Sciences Hall",
     emergencyContact: "+251934560003",
     status: "ACTIVE",
+    serviceDepartment: "ትምህርት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000002", // TEACH-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -453,6 +464,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Arts Block",
     emergencyContact: "+251945670004",
     status: "ACTIVE",
+    serviceDepartment: "መዝሙር",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000001", // CHOIR-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -486,6 +498,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Dorm 17",
     emergencyContact: "+251956780005",
     status: "ACTIVE",
+    serviceDepartment: "መዝሙር",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000001", // CHOIR-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -519,6 +532,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Health Sciences",
     emergencyContact: "+251967890006",
     status: "ACTIVE",
+    serviceDepartment: "ልማት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000003", // PRAY-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -552,6 +566,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Dorm 21",
     emergencyContact: "+251978900007",
     status: "ACTIVE",
+    serviceDepartment: "ልማት",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000003", // PRAY-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -585,6 +600,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Dorm 05",
     emergencyContact: "+251989010008",
     status: "ACTIVE",
+    serviceDepartment: "ዕቅድ",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000004", // EVANG-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -618,6 +634,7 @@ const INITIAL_MEMBERS: MemberRecord[] = [
     address: "Main Campus Law Faculty",
     emergencyContact: "+251990120009",
     status: "ACTIVE",
+    serviceDepartment: "ዕቅድ",
     currentDepartmentId: "d0000000-0000-0000-0000-000000000004", // EVANG-01
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1086,6 +1103,7 @@ export class MemberService {
       phoneNumber: input.phoneNumber ? input.phoneNumber.trim() : "",
       email: input.email ? input.email.trim().toLowerCase() : "",
       academicDepartment: input.academicDepartment ? input.academicDepartment.trim() : "",
+      serviceDepartment: input.serviceDepartment ? input.serviceDepartment.trim() : "",
       originRegion: input.originRegion ? input.originRegion.trim() : "",
       zone: input.zone ? input.zone.trim() : "",
       woreda: input.woreda ? input.woreda.trim() : "",
@@ -1147,6 +1165,7 @@ export class MemberService {
         phoneNumber: input.phoneNumber || "",
         email: input.email || "",
         academicDepartment: input.academicDepartment || "",
+        serviceDepartment: input.serviceDepartment || "",
         category: input.category || "STUDENT",
         spiritualStatus: input.spiritualStatus || "REGULAR",
         educationLevel: input.educationLevel || "",
@@ -1199,6 +1218,7 @@ export class MemberService {
 
     if (input.christianName !== undefined) member.christianName = input.christianName;
     if (input.academicDepartment !== undefined) member.academicDepartment = input.academicDepartment;
+    if (input.serviceDepartment !== undefined) member.serviceDepartment = input.serviceDepartment;
     if (input.originRegion !== undefined) member.originRegion = input.originRegion;
     if (input.zone !== undefined) member.zone = input.zone;
     if (input.woreda !== undefined) member.woreda = input.woreda;

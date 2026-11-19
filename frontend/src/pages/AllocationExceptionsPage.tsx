@@ -311,6 +311,7 @@ export const AllocationExceptionsPage: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-semibold">
                 <tr>
+                  <th className="px-5 py-3 w-12 text-center text-cyan-600 font-bold">ተ.ቁ</th>
                   <th className="px-5 py-3">Member Details</th>
                   <th className="px-5 py-3">Exception Type</th>
                   <th className="px-5 py-3">System Reason</th>
@@ -320,8 +321,11 @@ export const AllocationExceptionsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {exceptions.map((ex) => (
+                {exceptions.map((ex, idx) => (
                   <tr key={ex.id} className="hover:bg-slate-50/80">
+                    <td className="px-5 py-3.5 text-center font-mono font-bold text-slate-400">
+                      {idx + 1}
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="font-bold text-slate-900">{ex.memberName}</div>
                       <div className="font-mono text-[11px] text-blue-900">{ex.memberCode}</div>

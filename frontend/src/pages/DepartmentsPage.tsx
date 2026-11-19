@@ -1114,6 +1114,7 @@ export const DepartmentsPage: React.FC = () => {
                           className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer"
                         />
                       </th>
+                      <th className="px-3.5 py-4 w-12 text-center font-bold">ተ.ቁ</th>
                       <th className="px-5 py-4">Department / Code (የክፍል ኮድና ስም)</th>
                       <th className="px-5 py-4">Target Share (የድርሻ ምጣኔ)</th>
                       <th className="px-5 py-4">Capacity & Utilization (አቅምና አጠቃቀም)</th>
@@ -1146,6 +1147,11 @@ export const DepartmentsPage: React.FC = () => {
                               onChange={() => handleSelectRow(d.id)}
                               className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer"
                             />
+                          </td>
+
+                          {/* ተ.ቁ (Serial / Row Number) */}
+                          <td className="px-3.5 py-4 text-center font-mono font-bold text-slate-400">
+                            {(currentPage - 1) * itemsPerPage + idx + 1}
                           </td>
 
                           {/* Code & Name */}

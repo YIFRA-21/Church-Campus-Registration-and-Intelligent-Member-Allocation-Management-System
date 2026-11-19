@@ -65,6 +65,7 @@ const CANONICAL_FIELDS: { key: string; labelEn: string; labelAm: string; categor
   { key: "gender", labelEn: "Gender (MALE/FEMALE)", labelAm: "ጾታ", category: "Demographics", required: true },
   { key: "phone", labelEn: "Phone Number", labelAm: "ስልክ ቁጥር", category: "Contact", required: false },
   { key: "source_department_name", labelEn: "Source / Academic Department", labelAm: "የትምህርት ክፍል (ዲፓርትመንት)", category: "Academic", required: false },
+  { key: "service_department", labelEn: "Ministry Service Department", labelAm: "የአገልግሎት ክፍል (ዕቅድ፣ ትምህርት፣ ልማት...)", category: "Spiritual", required: false },
   { key: "region", labelEn: "Origin Region", labelAm: "የመጡበት ክልል", category: "Origin", required: false },
   { key: "zone", labelEn: "Zone", labelAm: "ዞን", category: "Origin", required: false },
   { key: "woreda", labelEn: "Woreda", labelAm: "ወረዳ", category: "Origin", required: false },
@@ -1087,7 +1088,7 @@ export const ExcelImportPage: React.FC = () => {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
                       <tr>
-                        <th className="p-3 border-b border-slate-800">#</th>
+                        <th className="p-3 border-b border-slate-800 text-cyan-400 font-bold">ተ.ቁ</th>
                         {detectedHeaders.map((h) => (
                           <th key={h} className="p-3 border-b border-slate-800 text-cyan-400 whitespace-nowrap">
                             {h}
@@ -1098,7 +1099,7 @@ export const ExcelImportPage: React.FC = () => {
                     <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
                       {sampleRows.map((row, idx) => (
                         <tr key={idx} className="hover:bg-slate-800/30 transition">
-                          <td className="p-3 text-slate-500 font-mono">{idx + 1}</td>
+                          <td className="p-3 text-cyan-400 font-mono font-bold">{idx + 1}</td>
                           {detectedHeaders.map((h) => (
                             <td key={h} className="p-3 text-slate-200 whitespace-nowrap">
                               {row[h] || "-"}
@@ -1188,7 +1189,7 @@ export const ExcelImportPage: React.FC = () => {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
                     <tr>
-                      <th className="p-3.5 border-b border-slate-800">Row #</th>
+                      <th className="p-3.5 border-b border-slate-800 text-cyan-400 font-bold">ተ.ቁ (Row #)</th>
                       <th className="p-3.5 border-b border-slate-800">Target Field</th>
                       <th className="p-3.5 border-b border-slate-800">Error Code</th>
                       <th className="p-3.5 border-b border-slate-800">Diagnostic Message</th>
@@ -1196,10 +1197,10 @@ export const ExcelImportPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
-                    {filteredErrors.map((err) => (
+                    {filteredErrors.map((err, errIdx) => (
                       <tr key={err.id} className="hover:bg-slate-800/30 transition">
-                        <td className="p-3.5 text-white font-bold whitespace-nowrap">
-                          Row {err.rowNumber}
+                        <td className="p-3.5 text-cyan-400 font-mono font-bold whitespace-nowrap">
+                          {err.rowNumber} (ተ.ቁ {errIdx + 1})
                         </td>
                         <td className="p-3.5 text-cyan-400 font-mono font-semibold whitespace-nowrap">
                           {err.fieldName}
@@ -1608,6 +1609,7 @@ export const ExcelImportPage: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
                   <tr>
+                    <th className="p-3.5 border-b border-slate-800 text-cyan-400 font-bold">ተ.ቁ</th>
                     <th className="p-3.5 border-b border-slate-800">Batch ID</th>
                     <th className="p-3.5 border-b border-slate-800">File Name</th>
                     <th className="p-3.5 border-b border-slate-800">Campus</th>
@@ -1620,8 +1622,11 @@ export const ExcelImportPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
-                  {history.map((batch) => (
+                  {history.map((batch, idx) => (
                     <tr key={batch.id} className="hover:bg-slate-800/30 transition">
+                      <td className="p-3.5 font-mono text-cyan-400 font-bold whitespace-nowrap">
+                        {idx + 1}
+                      </td>
                       <td className="p-3.5 font-mono text-slate-500 whitespace-nowrap">
                         {batch.id.substring(0, 10)}...
                       </td>
