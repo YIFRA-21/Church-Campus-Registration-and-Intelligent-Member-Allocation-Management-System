@@ -240,21 +240,22 @@ export const ExcelImportPage: React.FC = () => {
 
   const handleFileSelected = (file: File) => {
     const name = file.name.toLowerCase();
-    if (name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".xlsm") || name.endsWith(".ods")) {
-      setError(
-        "Only CSV (.csv) files are supported for import. Uploading Excel (.xlsx/.xls) spreadsheets is not permitted. Please export or save your file as UTF-8 CSV before uploading."
-      );
+    const isCsv = name.endsWith(".csv");
+    const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
+
+    if (!isCsv && !isExcel) {
+      setError(`Unsupported file format "${file.name}". Please provide a CSV (.csv) or Excel (.xlsx/.xls) spreadsheet.`);
       setSelectedFile(null);
       return;
     }
-    if (!name.endsWith(".csv")) {
-      setError(`Unsupported file format "${file.name}". Please provide a standard comma-delimited (.csv) file.`);
-      setSelectedFile(null);
-      return;
-    }
+
     setSelectedFile(file);
     setError(null);
-    setSuccessMsg(`File selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+    if (isExcel) {
+      setSuccessMsg(`Excel workbook selected: "${file.name}" (${(file.size / 1024).toFixed(1)} KB) · Ready for automated staging and column mapping.`);
+    } else {
+      setSuccessMsg(`CSV file selected: "${file.name}" (${(file.size / 1024).toFixed(1)} KB) · Ready for cryptographic staging.`);
+    }
   };
 
   // Upload and Stage CSV
@@ -915,7 +916,7 @@ export const ExcelImportPage: React.FC = () => {
               <input
                 type="file"
                 id="csv-file-input"
-                accept=".csv"
+                accept=".csv, .xlsx, .xls"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     handleFileSelected(e.target.files[0]);
@@ -929,29 +930,29 @@ export const ExcelImportPage: React.FC = () => {
               </div>
 
               <h4 className="text-lg font-bold text-white mb-1">
-                {selectedFile ? selectedFile.name : "Drag & Drop Member CSV File Here"}
+                {selectedFile ? selectedFile.name : "Drag & Drop Member Spreadsheet Here"}
               </h4>
               <p className="text-sm text-slate-400 mb-4">
                 {selectedFile
-                  ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready for cryptographic staging`
-                  : "Or click anywhere in this dashed box to browse files from your computer"}
+                  ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready for staging & ingestion`
+                  : "Supports standard CSV (.csv) and Microsoft Excel (.xlsx, .xls) spreadsheets"}
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  UTF-8 BOM Compatible
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-300 border border-emerald-800/40">
+                  Excel (.xlsx/.xls) Supported
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  Comma-Separated
+                  CSV (.csv) Compatible
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  Escaped Quotes &quot;&quot;
+                  UTF-8 BOM
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
                   Amharic &amp; English
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/50 text-rose-300 border border-rose-800/40">
-                  .xlsx rejected with guidance
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                  SHA-256 Hashed
                 </span>
               </div>
             </div>
@@ -989,7 +990,7 @@ export const ExcelImportPage: React.FC = () => {
                   ) : (
                     <>
                       <UploadCloud className="w-4 h-4" />
-                      <span>Stage CSV File</span>
+                      <span>Stage File (CSV or Excel)</span>
                     </>
                   )}
                 </button>

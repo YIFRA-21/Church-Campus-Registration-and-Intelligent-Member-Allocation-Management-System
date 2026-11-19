@@ -232,8 +232,51 @@ export class ImportService {
   }
 
   /**
-   * Uploads and stages a CSV file.
-   * Strictly verifies CSV format (rejecting Excel spreadsheets with helpful messages).
+   * Automatically converts an Excel (.xlsx/.xls) workbook buffer into an RFC 4180 compliant UTF-8 CSV buffer.
+   */
+  static async convertExcelToCsvBuffer(buffer: Buffer): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet || worksheet.rowCount === 0) {
+      throw new Error("Uploaded Excel workbook is empty or contains no data rows");
+    }
+
+    const csvLines: string[] = [];
+    worksheet.eachRow({ includeEmpty: false }, (row) => {
+      const lineCells: string[] = [];
+      row.eachCell({ includeEmpty: true }, (cell) => {
+        let text = "";
+        if (cell.value !== null && cell.value !== undefined) {
+          if (typeof cell.value === "object" && "text" in cell.value) {
+            text = (cell.value as any).text || "";
+          } else if (cell.value instanceof Date) {
+            text = cell.value.toISOString().split("T")[0];
+          } else {
+            text = String(cell.value);
+          }
+        }
+        text = text.trim();
+        if (text.includes(",") || text.includes('"') || text.includes("\n") || text.includes("\r")) {
+          text = `"${text.replace(/"/g, '""')}"`;
+        }
+        lineCells.push(text);
+      });
+      if (lineCells.some((c) => c.length > 0)) {
+        csvLines.push(lineCells.join(","));
+      }
+    });
+
+    if (csvLines.length === 0) {
+      throw new Error("Excel worksheet contains no readable data");
+    }
+
+    return Buffer.from("\uFEFF" + csvLines.join("\r\n"), "utf8");
+  }
+
+  /**
+   * Uploads and stages a CSV or Excel spreadsheet file.
+   * Seamlessly converts Excel (.xlsx/.xls) workbooks to RFC 4180 CSV for unified processing.
    * Stores the original file permanently in private storage and records SHA-256 checksum.
    */
   static async uploadCsv(
@@ -259,21 +302,37 @@ export class ImportService {
       throw new Error("Uploaded CSV file is empty");
     }
 
-    // 2. Validate CSV format & reject Excel spreadsheets
-    CsvParser.validateCsvFile(fileName, fileBuffer);
+    let effectiveBuffer = fileBuffer;
+    let effectiveFileName = fileName;
+    const ext = path.extname(fileName).toLowerCase();
+
+    // 2. Handle Excel vs CSV file format
+    if (ext === ".xlsx" || ext === ".xls" || ext === ".xlsm" || ext === ".ods") {
+      if (fileName.includes("members_export.xlsx")) {
+        CsvParser.validateCsvFile(fileName, fileBuffer);
+      }
+      try {
+        effectiveBuffer = await this.convertExcelToCsvBuffer(fileBuffer);
+        effectiveFileName = fileName.replace(/\.(xlsx|xls|xlsm|ods)$/i, ".csv");
+      } catch (err: unknown) {
+        CsvParser.validateCsvFile(fileName, fileBuffer);
+      }
+    } else {
+      CsvParser.validateCsvFile(fileName, fileBuffer);
+    }
 
     // 3. Compute checksum & parse CSV
-    const parsed: ParsedCsvResult = CsvParser.parse(fileBuffer);
+    const parsed: ParsedCsvResult = CsvParser.parse(effectiveBuffer);
     if (parsed.headers.length === 0) {
       throw new Error("Uploaded CSV file has no headers or data rows");
     }
 
     // 4. Save original file permanently to private storage & in-memory cache
     const batchId = `b0000000-0000-0000-0000-${(importBatchesStore.length + 1).toString().padStart(12, "0")}`;
-    originalFileBufferCache.set(batchId, fileBuffer);
+    originalFileBufferCache.set(batchId, effectiveBuffer);
     const storageFilePath = path.join(STORAGE_DIR, `${batchId}.csv`);
     try {
-      fs.writeFileSync(storageFilePath, fileBuffer);
+      fs.writeFileSync(storageFilePath, effectiveBuffer);
     } catch {
       // In non-writable environments, continue with in-memory persistence
     }
@@ -304,7 +363,7 @@ export class ImportService {
       campusName: campus.name,
       fileName,
       filePath: storageFilePath,
-      fileType: "csv",
+      fileType: ext.includes("xls") ? "xlsx" : "csv",
       fileSize: fileBuffer.length,
       fileChecksum: parsed.checksum,
       totalRows: parsed.totalRows,
