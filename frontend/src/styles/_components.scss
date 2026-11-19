@@ -6,14 +6,15 @@
 
 // --- 1. Dynamic Filter & Search Toolbar ---
 .cimas-filter-toolbar {
-  @include glass-panel(0.9, 12px);
+  background: #111a2e;
   border-radius: $radius-2xl;
   padding: 1rem 1.25rem;
-  box-shadow: $shadow-sm;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: box-shadow $transition-base;
 
   &:hover {
-    box-shadow: $shadow-md;
+    box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.45);
   }
 
   .search-input-wrap {
@@ -38,9 +39,9 @@
       padding-bottom: 0.625rem;
       font-size: 0.875rem;
       border-radius: $radius-xl;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #ffffff;
       transition: all $transition-fast;
 
       html:not(.dark) & {
@@ -50,7 +51,9 @@
       }
 
       &:focus {
-        background: rgba(255, 255, 255, 0.08);
+        background: #0d1525;
+        border-color: $color-primary-500 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
 
         html:not(.dark) & {
           background: #ffffff;
@@ -67,15 +70,21 @@
     padding: 0.625rem 2rem 0.625rem 0.875rem;
     font-size: 0.875rem;
     border-radius: $radius-xl;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #f8fafc;
+    background: #090e1a;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #ffffff;
     transition: all $transition-fast;
 
     html:not(.dark) & {
       background: #f8fafc;
       border-color: #cbd5e1;
       color: #0f172a;
+    }
+
+    &:focus {
+      background: #0d1525;
+      border-color: $color-primary-500 !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
     }
   }
 }

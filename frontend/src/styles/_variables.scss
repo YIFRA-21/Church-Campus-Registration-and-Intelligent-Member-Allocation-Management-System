@@ -1,20 +1,18 @@
 // ============================================================================
 // C-CIMAS SCSS DESIGN SYSTEM: TOKENS & VARIABLES
+// High-Definition Enterprise Contrast Palette
 // ============================================================================
 
-// --- Brand & Theme Colors ---
-$color-midnight: #070b13;
-$color-obsidian: #0b1220;
-$color-surface-dark: #0f172a;
-$color-surface-border-dark: #1e293b;
-$color-surface-hover-dark: #162032;
-
-$color-bg-light: #f8fafc;
+// --- Surface & Canvas Palettes ---
+$color-obsidian: #090d16;
+$color-midnight: #0f172a;
+$color-surface-dark: #131c31;
+$color-surface-elevated: #18223d;
+$color-surface-border-dark: rgba(255, 255, 255, 0.1);
 $color-surface-light: #ffffff;
 $color-surface-border-light: #e2e8f0;
-$color-surface-hover-light: #f1f5f9;
 
-// --- Primary Accent Palette ---
+// --- Brand & Primary Accents ---
 $color-primary-50: #eef2ff;
 $color-primary-100: #e0e7ff;
 $color-primary-200: #c7d2fe;
@@ -25,7 +23,6 @@ $color-primary-600: #4f46e5;
 $color-primary-700: #4338ca;
 $color-primary-800: #3730a3;
 $color-primary-900: #312e81;
-$color-primary-950: #1e1b4b;
 
 // --- Secondary Accents ---
 $color-blue-accent: #3b82f6;
@@ -40,26 +37,26 @@ $status-active: #10b981;
 $status-inactive: #f59e0b;
 $status-suspended: #ef4444;
 $status-on-hold: #6366f1;
-$status-archived: #64748b;
+$status-archived: #94a3b8;
 
-// --- Gradients ---
-$grad-hero-dark: linear-gradient(135deg, #070b13 0%, #0d1527 35%, #1e1b4b 75%, #0f172a 100%);
-$grad-hero-royal: linear-gradient(135deg, #090d16 0%, #1e1b4b 40%, #1e3a8a 80%, #0c1b33 100%);
-$grad-card-glass-dark: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(11, 18, 32, 0.95) 100%);
-$grad-card-glass-light: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
-$grad-accent-primary: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+// --- High-Definition Gradients ---
+$grad-hero-dark: linear-gradient(135deg, #0e172a 0%, #17223b 50%, #1e1b4b 100%);
+$grad-hero-royal: linear-gradient(135deg, #131c35 0%, #0f172a 50%, #16203a 100%);
+$grad-card-glass-dark: linear-gradient(145deg, #131c31 0%, #0e1628 100%);
+$grad-card-glass-light: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+$grad-accent-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
 $grad-accent-gold: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 $grad-accent-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
 $grad-shimmer: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
 
 // --- Elevation & Shadows ---
-$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-$shadow-glow-indigo: 0 0 25px rgba(99, 102, 241, 0.35);
-$shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.35);
-$shadow-glow-amber: 0 0 25px rgba(245, 158, 11, 0.35);
+$shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+$shadow-glow-indigo: 0 0 25px rgba(99, 102, 241, 0.45);
+$shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.45);
+$shadow-glow-amber: 0 0 25px rgba(245, 158, 11, 0.45);
 
 // --- Motion Timing & Transitions ---
 $ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
@@ -74,4 +71,5 @@ $radius-md: 0.5rem;
 $radius-lg: 0.75rem;
 $radius-xl: 1rem;
 $radius-2xl: 1.25rem;
+$radius-3xl: 1.5rem;
 $radius-full: 9999px;

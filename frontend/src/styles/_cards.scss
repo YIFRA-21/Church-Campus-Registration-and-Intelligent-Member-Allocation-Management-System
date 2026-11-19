@@ -6,7 +6,7 @@
 
 // --- Base Dynamic Card ---
 .cimas-card {
-  @include glass-panel(0.9, 14px);
+  @include glass-panel(0.96, 14px);
   @include hover-lift(-3px, 1.005);
   border-radius: $radius-2xl;
   padding: 1.5rem;
@@ -19,7 +19,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2px;
     background: transparent;
     transition: background $transition-base;
   }
@@ -39,7 +39,7 @@
 
 // --- Executive KPI Metric Card ---
 .cimas-kpi-card {
-  @include glass-panel(0.92, 16px);
+  @include glass-panel(0.96, 16px);
   @include hover-lift(-4px, 1.015);
   border-radius: $radius-2xl;
   padding: 1.25rem 1.5rem;
@@ -48,24 +48,26 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-top: 2px solid rgba(99, 102, 241, 0.4);
 
-  // Background subtle radial sheen
-  &::after {
-    content: "";
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 120px;
-    height: 120px;
-    border-radius: $radius-full;
-    background: radial-gradient(circle, rgba($color-primary-500, 0.12) 0%, transparent 70%);
-    pointer-events: none;
-    transition: opacity $transition-base, transform $transition-slow;
+  &--active {
+    border-top-color: $status-active;
   }
 
-  &:hover::after {
-    transform: scale(1.4);
-    opacity: 0.9;
+  &--warning {
+    border-top-color: $status-inactive;
+  }
+
+  &--danger {
+    border-top-color: $status-suspended;
+  }
+
+  &--cyan {
+    border-top-color: $color-cyan-accent;
+  }
+
+  &--purple {
+    border-top-color: $color-purple-accent;
   }
 
   .kpi-header {
@@ -76,7 +78,7 @@
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: #94a3b8;
     }
 
@@ -85,8 +87,8 @@
       height: 2.25rem;
       border-radius: $radius-xl;
       @include flex-center;
-      background: rgba($color-primary-500, 0.1);
-      color: $color-primary-400;
+      background: rgba($color-primary-500, 0.15);
+      color: $color-primary-300;
       transition: transform $transition-fast, background $transition-fast;
 
       html:not(.dark) & {
@@ -98,15 +100,15 @@
 
   &:hover .kpi-icon-wrap {
     transform: rotate(6deg) scale(1.1);
-    background: rgba($color-primary-500, 0.2);
+    background: rgba($color-primary-500, 0.25);
   }
 
   .kpi-value {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 900;
-    line-height: 1.2;
+    line-height: 1.15;
     letter-spacing: -0.02em;
-    color: #f8fafc;
+    color: #ffffff;
 
     html:not(.dark) & {
       color: #0f172a;
@@ -114,20 +116,20 @@
   }
 
   .kpi-footer {
-    margin-top: 0.5rem;
+    margin-top: 0.65rem;
     font-size: 0.75rem;
-    color: #64748b;
+    color: #94a3b8;
     display: flex;
     align-items: center;
     gap: 0.35rem;
 
     .kpi-trend-positive {
-      color: $status-active;
+      color: #34d399;
       font-weight: 600;
     }
 
     .kpi-trend-warning {
-      color: $status-inactive;
+      color: #fbbf24;
       font-weight: 600;
     }
   }
@@ -135,43 +137,15 @@
 
 // --- Canva-Inspired Dynamic Hero Banner ---
 .cimas-hero-banner {
-  background: $grad-hero-royal;
-  background-size: 200% 200%;
-  animation: gradientShift 15s ease infinite;
+  background: linear-gradient(135deg, #111a32 0%, #0c1425 60%, #151e36 100%);
   border-radius: $radius-2xl;
-  padding: 2.5rem 2rem;
+  padding: 2.25rem 2rem;
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: $shadow-xl;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-
-  // Decorative ambient glow orbs
-  .ambient-orb {
-    position: absolute;
-    border-radius: $radius-full;
-    filter: blur(60px);
-    pointer-events: none;
-    opacity: 0.35;
-    animation: float 6s ease-in-out infinite alternate;
-
-    &--blue {
-      top: -20%;
-      right: 10%;
-      width: 320px;
-      height: 320px;
-      background: #3b82f6;
-    }
-
-    &--purple {
-      bottom: -30%;
-      left: 15%;
-      width: 280px;
-      height: 280px;
-      background: #8b5cf6;
-      animation-delay: -3s;
-    }
-  }
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid #6366f1;
 
   .hero-badge {
     display: inline-flex;
@@ -179,11 +153,11 @@
     gap: 0.4rem;
     padding: 0.35rem 0.85rem;
     border-radius: $radius-full;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.4);
     font-size: 0.75rem;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
+    font-weight: 700;
+    color: #c7d2fe;
     margin-bottom: 0.85rem;
   }
 
@@ -193,13 +167,14 @@
     letter-spacing: -0.03em;
     line-height: 1.2;
     margin-bottom: 0.65rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   }
 
   .hero-subtitle {
     font-size: 0.95rem;
-    color: rgba(224, 231, 255, 0.85);
-    max-width: 42rem;
+    color: #cbd5e1;
+    max-width: 44rem;
     line-height: 1.6;
   }
 }

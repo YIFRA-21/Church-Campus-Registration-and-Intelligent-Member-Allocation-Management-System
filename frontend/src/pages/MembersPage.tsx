@@ -568,25 +568,24 @@ export const MembersPage: React.FC = () => {
   }, [summary]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070b13] text-slate-900 dark:text-slate-100 pb-16 cimas-mesh-bg transition-colors">
-      {/* 1. CANVA-INSPIRED EXECUTIVE HERO BANNER WITH SCSS DYNAMICS */}
-      <div className="cimas-hero-banner relative mb-8">
-        <div className="ambient-orb ambient-orb--blue" />
-        <div className="ambient-orb ambient-orb--purple" />
-
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 pb-16 transition-colors">
+      {/* 1. HIGH-DEFINITION EXECUTIVE HERO COMMAND BANNER */}
+      <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/70 border border-slate-800 border-t-2 border-t-indigo-500 shadow-2xl p-6 sm:p-8">
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <div className="hero-badge">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse-glow" />
-              <span>Module 3: Enterprise Member Management</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold mb-3 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Module 3 &bull; Enterprise Fellowship CRM</span>
             </div>
-            <h1 className="hero-title flex items-center gap-3">
-              <Users className="w-9 h-9 text-indigo-400" />
-              Member CRM & Fellowship Directory
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 flex-shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <span>Member CRM & Fellowship Directory</span>
             </h1>
-            <p className="hero-subtitle">
+            <p className="mt-2 text-slate-300 text-sm sm:text-base max-w-3xl leading-relaxed">
               Centralized registry enforcing single-campus membership, concurrency-safe member code
-              generation (<span className="text-amber-300 font-mono font-bold">MEM-YYYY-XXXX</span>), status audit trails, and Ethiopian Orthodox fellowship criteria.
+              generation (<span className="text-amber-300 font-mono font-bold bg-amber-400/15 px-2 py-0.5 rounded border border-amber-400/30">MEM-YYYY-XXXX</span>), tamper-evident audit trails, and Ethiopian Orthodox fellowship criteria.
             </p>
           </div>
 
@@ -600,13 +599,13 @@ export const MembersPage: React.FC = () => {
                   setSelectedCampusId(e.target.value);
                   setPage(1);
                 }}
-                className="bg-white/10 text-white border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-400 focus:outline-none backdrop-blur-md"
+                className="bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-md"
               >
-                <option value="" className="text-slate-900">
+                <option value="" className="bg-slate-900 text-white">
                   All Campuses (Enterprise View)
                 </option>
                 {campuses.map((c) => (
-                  <option key={c.id} value={c.id} className="text-slate-900">
+                  <option key={c.id} value={c.id} className="bg-slate-900 text-white">
                     {c.name} ({c.code})
                   </option>
                 ))}
@@ -616,11 +615,11 @@ export const MembersPage: React.FC = () => {
             {/* Export CSV */}
             <button
               onClick={handleExportCSV}
-              className="cimas-btn-dynamic px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-sm font-medium shadow-sm backdrop-blur-md"
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-sm font-semibold shadow-md flex items-center gap-2 transition hover:border-slate-500 active:scale-95"
               title="Export filtered records to CSV"
             >
-              <Download className="w-4 h-4 text-emerald-300" />
-              Export
+              <Download className="w-4 h-4 text-emerald-400" />
+              <span>Export</span>
             </button>
 
             {/* Refresh */}
@@ -629,20 +628,20 @@ export const MembersPage: React.FC = () => {
                 loadMembers();
                 loadSummary();
               }}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition backdrop-blur-md"
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 transition shadow-md hover:border-slate-500 active:scale-95"
               title="Refresh Directory"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : "text-slate-300"}`} />
             </button>
 
             {/* New Member Registration Button */}
             {hasPermission("members:write") && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="cimas-btn-dynamic cimas-btn-dynamic--primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition active:scale-95"
               >
                 <UserPlus className="w-4 h-4" />
-                Register Member
+                <span>Register Member</span>
               </button>
             )}
           </div>
@@ -652,160 +651,195 @@ export const MembersPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Flash Notifications */}
         {error && (
-          <div className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 p-4 text-red-800 dark:text-red-300 text-sm flex items-center justify-between shadow-sm animate-scale-in">
+          <div className="rounded-xl bg-red-950/60 border border-red-800 p-4 text-red-200 text-sm flex items-center justify-between shadow-lg animate-scale-in">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <span>{error}</span>
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <span className="font-medium">{error}</span>
             </div>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {successMsg && (
-          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 p-4 text-emerald-800 dark:text-emerald-300 text-sm flex items-center justify-between shadow-sm animate-scale-in">
+          <div className="rounded-xl bg-emerald-950/60 border border-emerald-800 p-4 text-emerald-200 text-sm flex items-center justify-between shadow-lg animate-scale-in">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-              <span>{successMsg}</span>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span className="font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-emerald-200">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* 2. SIX EXECUTIVE KPI METRIC CARDS WITH SCSS HOVER LIFTS & GLOW */}
+        {/* 2. SIX HIGH-DEFINITION VIVID KPI METRIC CARDS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Card 1: Total Members */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">Total Enrolled</span>
-              <div className="kpi-icon-wrap">
-                <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-indigo-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Enrolled</span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Users className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value">
+            <div className="text-3xl font-extrabold text-white tracking-tight">
               {summaryLoading ? "..." : summary?.totalMembers ?? 0}
             </div>
-            <div className="kpi-footer">
-              <span className="kpi-trend-positive">100%</span> Single campus rule
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
+              <span className="font-bold">100%</span> Single campus rule
             </div>
           </div>
 
           {/* Card 2: Active Fellowship */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">Active Fellowship</span>
-              <div className="kpi-icon-wrap">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-emerald-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Active Fellowship</span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value text-emerald-600 dark:text-emerald-400">
+            <div className="text-3xl font-extrabold text-emerald-400 tracking-tight">
               {summaryLoading ? "..." : summary?.activeMembers ?? 0}
             </div>
-            <div className="kpi-footer">
-              <span className="kpi-trend-positive">Ready for allocation</span>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Ready for allocation
             </div>
           </div>
 
           {/* Card 3: Inactive & On Hold */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">On Hold / Inactive</span>
-              <div className="kpi-icon-wrap">
-                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-amber-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">On Hold / Inactive</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Clock className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value text-amber-600 dark:text-amber-400">
+            <div className="text-3xl font-extrabold text-amber-400 tracking-tight">
               {summaryLoading ? "..." : (summary?.inactiveMembers ?? 0) + (summary?.onHoldMembers ?? 0)}
             </div>
-            <div className="kpi-footer">
-              <span className="kpi-trend-warning">Requires review</span>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+              Requires review
             </div>
           </div>
 
           {/* Card 4: Suspended & Archived */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">Archived / Flagged</span>
-              <div className="kpi-icon-wrap">
-                <Archive className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-rose-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Archived / Flagged</span>
+              <div className="w-9 h-9 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <Archive className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value text-rose-600 dark:text-rose-400">
+            <div className="text-3xl font-extrabold text-rose-400 tracking-tight">
               {summaryLoading ? "..." : (summary?.archivedMembers ?? 0) + (summary?.suspendedMembers ?? 0)}
             </div>
-            <div className="kpi-footer">
-              <span>Preserved in DB</span>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              Preserved in DB
             </div>
           </div>
 
           {/* Card 5: Data Completeness */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">Data Quality</span>
-              <div className="kpi-icon-wrap">
-                <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-cyan-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Data Quality</span>
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Activity className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value text-blue-600 dark:text-blue-400">
-              {summaryLoading ? "..." : `${summary?.completenessRate ?? 95}%`}
+            <div className="text-3xl font-extrabold text-cyan-400 tracking-tight">
+              {summaryLoading ? "..." : `${summary?.completenessRate ?? 100}%`}
             </div>
-            <div className="kpi-footer">
-              <span>Profile completeness</span>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+              Profile completeness
             </div>
           </div>
 
           {/* Card 6: Students vs Non-Students */}
-          <div className="cimas-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-label">Campus Students</span>
-              <div className="kpi-icon-wrap">
-                <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-purple-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Campus Students</span>
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <GraduationCap className="w-4 h-4" />
               </div>
             </div>
-            <div className="kpi-value text-purple-600 dark:text-purple-400">
+            <div className="text-3xl font-extrabold text-purple-400 tracking-tight">
               {summaryLoading ? "..." : summary?.categoryDistribution?.STUDENT ?? 0}
             </div>
-            <div className="kpi-footer">
-              <span>Academic fellowship</span>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-purple-400 font-medium">
+              Academic fellowship
             </div>
           </div>
         </div>
 
-        {/* 3. RECHARTS DEMOGRAPHIC VISUALIZATIONS WITH DYNAMIC GLASS CARDS */}
+        {/* 3. RECHARTS DEMOGRAPHIC VISUALIZATIONS (HIGH DEFINITION & FIXED MARGINS) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Chart 1: Category Distribution */}
-          <div className="cimas-card cimas-card--primary p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <PieChartIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                Fellowship Demographic Breakdown
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <PieChartIcon className="w-4 h-4 text-indigo-400" />
+                <span>Fellowship Demographic Breakdown</span>
               </h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">By Member Category</span>
+              <span className="text-xs text-slate-400 font-medium">By Member Category</span>
             </div>
-            <div className="h-48 flex items-center justify-center">
+
+            <div className="h-64 flex flex-col sm:flex-row items-center justify-center gap-4">
               {categoryPieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryPieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={65}
-                      innerRadius={35}
-                      label={(entry) => `${entry.name}: ${entry.value}`}
-                    >
-                      {categoryPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <>
+                  <div className="w-full sm:w-1/2 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryPieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={48}
+                          outerRadius={78}
+                          paddingAngle={3}
+                        >
+                          {categoryPieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0f172a",
+                            borderColor: "#334155",
+                            borderRadius: "0.75rem",
+                            color: "#f8fafc",
+                            fontSize: "12px",
+                            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Crisp Side Legend */}
+                  <div className="w-full sm:w-1/2 flex flex-col gap-2 pr-2">
+                    {categoryPieData.map((item, idx) => {
+                      const total = categoryPieData.reduce((acc, curr) => acc + curr.value, 0) || 1;
+                      const pct = Math.round((item.value / total) * 100);
+                      return (
+                        <div key={idx} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-slate-800/60 border border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></span>
+                            <span className="text-slate-200 font-semibold">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold">{item.value}</span>
+                            <span className="text-slate-400 font-mono text-[11px]">({pct}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <span className="text-xs text-slate-400">No demographic data available</span>
               )}
@@ -813,22 +847,47 @@ export const MembersPage: React.FC = () => {
           </div>
 
           {/* Chart 2: Gender Distribution */}
-          <div className="cimas-card cimas-card--emerald p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Gender Ratio & Spiritual Ministry
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-400" />
+                <span>Gender Ratio & Spiritual Ministry</span>
               </h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Active Membership</span>
+              <span className="text-xs text-slate-400 font-medium">Active Membership</span>
             </div>
-            <div className="h-48 flex items-center justify-center">
+
+            <div className="h-64 flex items-center justify-center">
               {genderBarData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={genderBarData}>
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#10B981" radius={[6, 6, 0, 0]} />
+                  <BarChart data={genderBarData} margin={{ top: 20, right: 20, left: -10, bottom: 25 }}>
+                    <defs>
+                      <linearGradient id="emeraldBarGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="#047857" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: "#cbd5e1", fontSize: 13, fontWeight: 600 }}
+                      axisLine={{ stroke: "rgba(255, 255, 255, 0.2)" }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#94a3b8", fontSize: 12 }}
+                      axisLine={{ stroke: "rgba(255, 255, 255, 0.2)" }}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        borderColor: "#334155",
+                        borderRadius: "0.75rem",
+                        color: "#f8fafc",
+                        fontSize: "12px",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="url(#emeraldBarGrad)" radius={[8, 8, 0, 0]} maxBarSize={60} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -838,12 +897,12 @@ export const MembersPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 4. ADVANCED FILTERING & SEARCH TOOLBAR */}
-        <div className="cimas-filter-toolbar space-y-3">
+        {/* 4. ADVANCED FILTERING & SEARCH TOOLBAR (HIGH CONTRAST & CRISP) */}
+        <div className="rounded-2xl bg-slate-900/95 border border-slate-800 p-4 sm:p-5 shadow-xl space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             {/* Search Input */}
             <div className="lg:col-span-2 relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search by code, full name, phone, dept..."
@@ -852,7 +911,7 @@ export const MembersPage: React.FC = () => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
               />
             </div>
 
@@ -864,7 +923,7 @@ export const MembersPage: React.FC = () => {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
               >
                 <option value="">All Statuses</option>
                 <option value="ACTIVE">ACTIVE</option>
@@ -883,7 +942,7 @@ export const MembersPage: React.FC = () => {
                   setCategoryFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
               >
                 <option value="">All Categories</option>
                 <option value="STUDENT">STUDENT</option>
@@ -902,7 +961,7 @@ export const MembersPage: React.FC = () => {
                   setSpiritualFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
               >
                 <option value="">All Spiritual Roles</option>
                 <option value="REGULAR">REGULAR</option>
@@ -919,7 +978,7 @@ export const MembersPage: React.FC = () => {
                   setGenderFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
               >
                 <option value="">All Genders</option>
                 <option value="MALE">MALE</option>
@@ -930,8 +989,8 @@ export const MembersPage: React.FC = () => {
 
           {/* Reset Filters */}
           {(search || statusFilter || categoryFilter || spiritualFilter || genderFilter) && (
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
-              <span>Filtering active results ({totalCount} found)</span>
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
+              <span className="font-medium text-slate-300">Filtering active results: <strong className="text-white">{totalCount}</strong> found</span>
               <button
                 onClick={() => {
                   setSearch("");
@@ -941,9 +1000,10 @@ export const MembersPage: React.FC = () => {
                   setGenderFilter("");
                   setPage(1);
                 }}
-                className="text-indigo-600 font-semibold hover:underline"
+                className="text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1"
               >
-                Clear all filters
+                <X className="w-3.5 h-3.5" />
+                <span>Clear all filters</span>
               </button>
             </div>
           )}
