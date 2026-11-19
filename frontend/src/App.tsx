@@ -94,6 +94,46 @@ export const App: React.FC = () => {
             }
           />
           <Route
+            path="/eligibility"
+            element={
+              <ProtectedRoute requiredPermission="allocation.review">
+                <AppLayout>
+                  <AllocationExceptionsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/capacity"
+            element={
+              <ProtectedRoute requiredPermission="department.view">
+                <AppLayout>
+                  <DepartmentRostersPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/approval"
+            element={
+              <ProtectedRoute requiredPermission="allocation.review">
+                <AppLayout>
+                  <AllocationExceptionsPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reassignment"
+            element={
+              <ProtectedRoute requiredPermission="allocation.review">
+                <AppLayout>
+                  <AllocationEnginePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/rosters"
             element={
               <ProtectedRoute requiredPermission="department.view">

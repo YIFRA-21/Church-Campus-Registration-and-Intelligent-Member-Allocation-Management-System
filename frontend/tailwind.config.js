@@ -5,6 +5,25 @@ export default {
   theme: {
     extend: {
       colors: {
+        cimas: {
+          main: "#0B1020",
+          sidebar: "#111A2E",
+          card: "#17233B",
+          elevated: "#1E2C47",
+          border: "#263653",
+          purple: "#8B5CF6",
+          blue: "#3B82F6",
+          cyan: "#06B6D4",
+          green: "#10B981",
+          orange: "#F59E0B",
+          red: "#EF4444",
+          pink: "#EC4899",
+          text: {
+            primary: "#F8FAFC",
+            secondary: "#94A3B8",
+            muted: "#64748B",
+          },
+        },
         navy: {
           50: "#f0f4f9",
           100: "#dbe5f0",
@@ -21,12 +40,16 @@ export default {
         primary: {
           50: "#eef2ff",
           100: "#e0e7ff",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
+          500: "#8B5CF6",
+          600: "#7C3AED",
+          700: "#6D28D9",
+          800: "#5B21B6",
+          900: "#4C1D95",
         },
+      },
+      borderRadius: {
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
     },
   },

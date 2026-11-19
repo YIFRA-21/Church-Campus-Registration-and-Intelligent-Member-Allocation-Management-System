@@ -1,0 +1,44 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: GLOBAL APPLICATION CANVAS
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+html, body {
+  background-color: $bg-main !important;
+  color: $text-primary !important;
+  min-height: 100vh;
+  @include custom-scrollbar(8px, $bg-sidebar, rgba(139, 92, 246, 0.3), $primary-purple);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $bg-main;
+}
+
+// Global focus outlines with vibrant glow
+:focus-visible {
+  outline: 2px solid $primary-purple;
+  outline-offset: 2px;
+}
+
+// Container spacing
+.cimas-container {
+  width: 100%;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1.5rem;
+}
+
+// Subtle cosmic mesh pattern background
+.cimas-cosmic-bg {
+  background-color: $bg-main;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px;
+}

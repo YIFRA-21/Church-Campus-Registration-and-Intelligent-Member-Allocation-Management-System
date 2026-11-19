@@ -1,0 +1,103 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: MIXINS
+// ============================================================================
+@use "variables" as *;
+
+// Custom sleek scrollbar
+@mixin custom-scrollbar($width: 6px, $track: $bg-sidebar, $thumb: rgba(139, 92, 246, 0.4), $thumb-hover: #8b5cf6) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+  &::-webkit-scrollbar-track {
+    background: $track;
+    border-radius: $radius-full;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $thumb;
+    border-radius: $radius-full;
+    transition: background $transition-normal;
+    &:hover {
+      background: $thumb-hover;
+    }
+  }
+  scrollbar-width: thin;
+  scrollbar-color: $thumb $track;
+}
+
+// Glassmorphism card surface with crisp border
+@mixin glass-card($bg: $bg-card, $border: $border-color, $blur: 12px) {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: $radius-2xl;
+  box-shadow: $shadow-card;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  transition: transform $transition-normal, border-color $transition-normal, box-shadow $transition-normal;
+
+  &:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.55), 0 0 15px rgba(139, 92, 246, 0.15);
+  }
+}
+
+// Interactive hover lift
+@mixin hover-lift($y: -3px) {
+  transition: transform $transition-normal, box-shadow $transition-normal;
+  &:hover {
+    transform: translateY($y);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Flex center alignment shorthand
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Flex space between shorthand
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Ellipsis single line truncation
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Multi-line clamp
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Responsive Breakpoint mixins
+@mixin responsive-sm {
+  @media (min-width: 640px) { @content; }
+}
+
+@mixin responsive-md {
+  @media (min-width: 768px) { @content; }
+}
+
+@mixin responsive-lg {
+  @media (min-width: 1024px) { @content; }
+}
+
+@mixin responsive-xl {
+  @media (min-width: 1280px) { @content; }
+}
+
+@mixin responsive-2xl {
+  @media (min-width: 1536px) { @content; }
+}

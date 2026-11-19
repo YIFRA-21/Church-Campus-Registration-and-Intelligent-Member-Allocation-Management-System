@@ -1,0 +1,141 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: MODERN DARK SIDEBAR
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cimas-sidebar {
+  width: 17.5rem; // 280px
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: $bg-sidebar;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  z-index: $z-fixed;
+  transition: transform $transition-smooth;
+
+  @include custom-scrollbar(5px, $bg-sidebar, rgba(139, 92, 246, 0.25), $primary-purple);
+
+  &__brand {
+    padding: 1.25rem 1.25rem 1rem 1.25rem;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    background: rgba(11, 16, 32, 0.4);
+  }
+
+  &__logo {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $radius-xl;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $grad-primary;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+    flex-shrink: 0;
+  }
+
+  &__brand-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .amharic-sub {
+      font-size: 0.7rem;
+      color: #a78bfa;
+      font-weight: 600;
+      @include text-truncate;
+    }
+  }
+
+  &__nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $text-muted;
+    letter-spacing: 0.08em;
+    padding: 0.75rem 0.75rem 0.375rem 0.75rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: $radius-xl;
+    color: $text-secondary;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all $transition-normal;
+    position: relative;
+
+    .item-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+      flex-shrink: 0;
+      transition: transform $transition-normal;
+    }
+
+    &:hover {
+      color: $text-primary;
+      background-color: rgba(255, 255, 255, 0.04);
+      transform: translateX(3px);
+
+      .item-icon {
+        transform: scale(1.1);
+      }
+    }
+
+    // Active Menu item with purple to blue gradient
+    &.active {
+      background: $grad-primary;
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4), 0 0 10px rgba(59, 130, 246, 0.3);
+
+      .item-icon {
+        color: #ffffff !important;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        right: 0.5rem;
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 50%;
+        background-color: #ffffff;
+        box-shadow: 0 0 6px #ffffff;
+      }
+    }
+  }
+
+  &__footer {
+    padding: 1rem;
+    border-top: 1px solid $border-color;
+    background: rgba(11, 16, 32, 0.5);
+  }
+}

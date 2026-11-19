@@ -1,0 +1,40 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: MAIN SHELL LAYOUT
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cimas-layout {
+  min-height: 100vh;
+  display: flex;
+  background-color: $bg-main;
+
+  &__main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: margin-left $transition-smooth;
+
+    @include responsive-lg {
+      margin-left: 17.5rem; // Sidebar width
+    }
+  }
+
+  &__content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    width: 100%;
+    max-width: 1700px;
+    margin: 0 auto;
+  }
+
+  &__footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid $border-color;
+    background-color: rgba(17, 26, 46, 0.5);
+    @include flex-between;
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+}

@@ -1,0 +1,168 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: FORMS & INPUTS
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cimas-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1.25rem;
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .required {
+      color: $status-danger;
+    }
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+
+  &__error {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+}
+
+.cimas-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .input-icon-left {
+    position: absolute;
+    left: 0.875rem;
+    color: $text-muted;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .input-icon-right {
+    position: absolute;
+    right: 0.875rem;
+    color: $text-muted;
+    z-index: 2;
+  }
+}
+
+.cimas-input,
+.cimas-select,
+.cimas-textarea {
+  width: 100%;
+  background-color: $bg-card-elevated;
+  border: 1px solid $border-color;
+  border-radius: $radius-xl;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: $text-primary;
+  transition: all $transition-normal;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-purple;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    background-color: $bg-card-hover;
+  }
+
+  &:disabled {
+    background-color: rgba(17, 26, 46, 0.6);
+    border-color: rgba(38, 54, 83, 0.4);
+    color: $text-disabled;
+    cursor: not-allowed;
+  }
+
+  &.has-icon-left {
+    padding-left: 2.5rem;
+  }
+
+  &.has-icon-right {
+    padding-right: 2.5rem;
+  }
+
+  &.is-invalid {
+    border-color: $status-danger;
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+    }
+  }
+}
+
+.cimas-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+
+  option {
+    background-color: $bg-card-elevated;
+    color: $text-primary;
+  }
+}
+
+.cimas-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+// Global search bar in navbar
+.cimas-search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+
+  input {
+    width: 100%;
+    background-color: rgba(17, 26, 46, 0.85);
+    border: 1px solid $border-color;
+    border-radius: $radius-xl;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    font-size: 0.875rem;
+    color: $text-primary;
+    transition: all $transition-normal;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary-purple;
+      background-color: $bg-card;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    }
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $text-muted;
+    pointer-events: none;
+  }
+}

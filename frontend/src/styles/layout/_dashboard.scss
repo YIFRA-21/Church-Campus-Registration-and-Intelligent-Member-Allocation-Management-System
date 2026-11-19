@@ -1,0 +1,53 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: DASHBOARD LAYOUT
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cimas-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__stat-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.25rem;
+
+    @include responsive-sm {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include responsive-lg {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__chart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+
+    @include responsive-lg {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+  }
+
+  &__col-8 {
+    @include responsive-lg {
+      grid-column: span 8 / span 8;
+    }
+  }
+
+  &__col-4 {
+    @include responsive-lg {
+      grid-column: span 4 / span 4;
+    }
+  }
+
+  &__col-6 {
+    @include responsive-lg {
+      grid-column: span 6 / span 6;
+    }
+  }
+}

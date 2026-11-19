@@ -8,11 +8,11 @@ import {
   Layers,
   Users,
   FileSpreadsheet,
-  Cpu,
-  AlertTriangle,
-  LogOut,
   ShieldCheck,
-  ClipboardList,
+  BarChart3,
+  Cpu,
+  CheckCircle2,
+  GitPullRequest,
   ClipboardCheck,
   PieChart,
   ShieldAlert,
@@ -21,7 +21,6 @@ import {
   User,
   Key,
   X,
-  CheckCircle2,
   AlertCircle,
   Eye,
   EyeOff,
@@ -32,6 +31,9 @@ import {
   Search,
   Menu,
   MessageSquare,
+  LogOut,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,10 +51,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   });
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
-  // Black and White (Dark / Light Mode) Theme State
+  // Black and White (Dark / Light Mode) Theme State - Default dark navy
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("cimas_theme");
-    return saved !== null ? saved === "dark" : true; // Default to dark mode matching UI reference
+    return saved !== null ? saved === "dark" : true;
   });
 
   // Notifications State & Dropdown
@@ -76,7 +78,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     {
       id: "n3",
       title: "Department Quotas Synced",
-      description: "All 5 campus target quotas verified and active.",
+      description: "All campus target quotas verified and active in PostgreSQL.",
       time: "1h ago",
       read: false,
     },
@@ -120,8 +122,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
-      document.documentElement.style.backgroundColor = "#070b13";
-      if (document.body) document.body.style.backgroundColor = "#070b13";
+      document.documentElement.style.backgroundColor = "#0B1020";
+      if (document.body) document.body.style.backgroundColor = "#0B1020";
       localStorage.setItem("cimas_theme", "dark");
     } else {
       document.documentElement.classList.remove("dark");
@@ -239,42 +241,146 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     return name.slice(0, 2).toUpperCase();
   };
 
-  const availableModules = useMemo(
-    () => [
-      { to: "/", label: "Dashboard", amLabel: "ዳሽቦርድ", desc: "System Overview & Telemetry Metrics", icon: LayoutDashboard },
-      ...(hasPermission("campus.manage") || hasPermission("campus.view")
-        ? [{ to: "/campuses", label: "Campuses", amLabel: "የግቢ ጉባኤያት", desc: "Campus Tenancy & Structure", icon: Building2 }]
-        : []),
-      ...(hasPermission("department.manage")
-        ? [{ to: "/departments", label: "Departments", amLabel: "ክፍላት", desc: "Ministry Departments & Quotas", icon: Layers }]
-        : []),
-      ...(hasPermission("member.view_all")
-        ? [{ to: "/members", label: "Members", amLabel: "አባላት", desc: "Active Member Registry", icon: Users }]
-        : []),
-      ...(hasPermission("member.import_excel")
-        ? [{ to: "/import", label: "Excel Bulk Import", amLabel: "ኤክሴል ማስገቢያ", desc: "Batch Import Member Rosters", icon: FileSpreadsheet }]
-        : []),
-      ...(hasPermission("allocation.review")
-        ? [{ to: "/allocation", label: "Allocation Engine", amLabel: "የክፍፍል ሞተር", desc: "Intelligent Placement & Quota Engine", icon: Cpu }]
-        : []),
-      ...(hasPermission("allocation.review")
-        ? [{ to: "/exceptions", label: "Review Exceptions", amLabel: "ልዩ ሁኔታዎች", desc: "Placement Exceptions & Conflicts", icon: AlertTriangle }]
-        : []),
-      ...(hasPermission("department.view")
-        ? [{ to: "/rosters", label: "Department Rosters", amLabel: "የክፍል አባላት ማውጫ", desc: "Department Lists & Demographics", icon: ClipboardList }]
-        : []),
-      ...(hasPermission("evaluation.view_assigned") || hasPermission("evaluation.manage")
-        ? [{ to: "/evaluations", label: "Evaluations & Tasks", amLabel: "ግምገማዎችና ተግባራት", desc: "Evaluator Assessments & Scores", icon: ClipboardCheck }]
-        : []),
-      ...(hasPermission("reports.view")
-        ? [{ to: "/reports", label: "Reports & Analytics", amLabel: "ሪፖርቶች", desc: "Visual Charts & Quota Analytics", icon: PieChart }]
-        : []),
-      ...(hasPermission("audit.view")
-        ? [{ to: "/audit-logs", label: "Audit Ledger", amLabel: "የኦዲት መዝገብ", desc: "Security Ledger & Activity Trails", icon: ShieldAlert }]
-        : []),
-    ],
-    [hasPermission]
-  );
+  // 13 C-CIMAS Modules organized into enterprise groups with semantic icon colors
+  const navSections = useMemo(() => [
+    {
+      groupTitle: language === "am" ? "ዋና አስተዳደር" : "CORE GOVERNANCE",
+      items: [
+        {
+          to: "/",
+          label: "Dashboard",
+          amLabel: "ዳሽቦርድ",
+          desc: "System Overview & Telemetry Metrics",
+          icon: LayoutDashboard,
+          color: "#8B5CF6", // Purple
+          visible: true,
+        },
+        {
+          to: "/campuses",
+          label: "Campus Management",
+          amLabel: "የግቢ ጉባኤያት",
+          desc: "Multi-Campus Tenancy & Structure",
+          icon: Building2,
+          color: "#3B82F6", // Blue
+          visible: hasPermission("campus.manage") || hasPermission("campus.view") || isAdmin,
+        },
+        {
+          to: "/departments",
+          label: "Department Management",
+          amLabel: "ክፍላት",
+          desc: "Ministry Departments, Quotas & Criteria",
+          icon: Layers,
+          color: "#8B5CF6", // Purple
+          visible: hasPermission("department.manage") || hasPermission("department.view") || isAdmin,
+        },
+        {
+          to: "/members",
+          label: "Member Management",
+          amLabel: "አባላት",
+          desc: "Active Member Registry & CRM",
+          icon: Users,
+          color: "#06B6D4", // Cyan
+          visible: hasPermission("member.view_all") || isAdmin,
+        },
+      ],
+    },
+    {
+      groupTitle: language === "am" ? "የክፍፍል ሂደት" : "INTELLIGENT ALLOCATION",
+      items: [
+        {
+          to: "/import",
+          label: "Import & Validation",
+          amLabel: "ኤክሴል ማስገቢያ",
+          desc: "Batch Import Member Rosters & Excel",
+          icon: FileSpreadsheet,
+          color: "#F59E0B", // Orange
+          visible: hasPermission("member.import_excel") || isAdmin,
+        },
+        {
+          to: "/eligibility",
+          label: "Eligibility Management",
+          amLabel: "የብቁነት ማረጋገጫ",
+          desc: "Liturgical & Fellowship Eligibility Rules",
+          icon: ShieldCheck,
+          color: "#14B8A6", // Teal
+          visible: hasPermission("allocation.review") || isAdmin,
+        },
+        {
+          to: "/capacity",
+          label: "Capacity Management",
+          amLabel: "የክፍል አቅም ማስተዳደሪያ",
+          desc: "Campus & Department Quota Capacities",
+          icon: BarChart3,
+          color: "#EAB308", // Yellow
+          visible: hasPermission("department.view") || isAdmin,
+        },
+        {
+          to: "/allocation",
+          label: "Allocation Engine",
+          amLabel: "የክፍፍል ሞተር",
+          desc: "Intelligent Placement & Quota Engine",
+          icon: Cpu,
+          color: "#6366F1", // Indigo
+          visible: hasPermission("allocation.review") || isAdmin,
+        },
+        {
+          to: "/approval",
+          label: "Allocation Approval",
+          amLabel: "የክፍፍል ማጽደቂያ",
+          desc: "Review Exceptions & Final Approval",
+          icon: CheckCircle2,
+          color: "#10B981", // Green
+          visible: hasPermission("allocation.review") || isAdmin,
+        },
+        {
+          to: "/reassignment",
+          label: "Reassignment",
+          amLabel: "እንደገና መመደብ",
+          desc: "Member Transfer & Department Reassignment",
+          icon: GitPullRequest,
+          color: "#EC4899", // Pink
+          visible: hasPermission("allocation.review") || isAdmin,
+        },
+      ],
+    },
+    {
+      groupTitle: language === "am" ? "ግምገማና ቁጥጥር" : "EVALUATION & AUDIT",
+      items: [
+        {
+          to: "/evaluations",
+          label: "Evaluation",
+          amLabel: "ግምገማዎችና ተግባራት",
+          desc: "Evaluator Assessments & Liturgical Scores",
+          icon: ClipboardCheck,
+          color: "#7C3AED", // Violet
+          visible: hasPermission("evaluation.view_assigned") || hasPermission("evaluation.manage") || isAdmin,
+        },
+        {
+          to: "/reports",
+          label: "Reporting Management",
+          amLabel: "ሪፖርቶች",
+          desc: "Visual Charts & Demographic Analytics",
+          icon: PieChart,
+          color: "#0284C7", // Sky blue
+          visible: hasPermission("reports.view") || isAdmin,
+        },
+        {
+          to: "/audit-logs",
+          label: "Audit & History",
+          amLabel: "የኦዲት መዝገብ",
+          desc: "Immutable Audit Trails & Security Ledger",
+          icon: ShieldAlert,
+          color: "#64748B", // Slate
+          visible: hasPermission("audit.view") || isAdmin,
+        },
+      ],
+    },
+  ], [hasPermission, isAdmin, language]);
+
+  // Flattened available modules for search
+  const availableModules = useMemo(() => {
+    return navSections.flatMap((s) => s.items.filter((item) => item.visible));
+  }, [navSections]);
 
   const filteredModules = useMemo(() => {
     if (!searchQuery.trim()) return availableModules;
@@ -287,72 +393,48 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     );
   }, [availableModules, searchQuery]);
 
-  const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
-    ...(hasPermission("campus.manage") || hasPermission("campus.view") ? [{ to: "/campuses", label: "Campuses", icon: Building2 }] : []),
-    ...(hasPermission("department.manage") ? [{ to: "/departments", label: "Departments", icon: Layers }] : []),
-    ...(hasPermission("member.view_all") ? [{ to: "/members", label: "Members", icon: Users }] : []),
-    ...(hasPermission("member.import_excel") ? [{ to: "/import", label: "Excel Bulk Import", icon: FileSpreadsheet }] : []),
-    ...(hasPermission("allocation.review") ? [{ to: "/allocation", label: "Allocation Engine", icon: Cpu }] : []),
-    ...(hasPermission("allocation.review") ? [{ to: "/exceptions", label: "Review Exceptions", icon: AlertTriangle }] : []),
-    ...(hasPermission("department.view") ? [{ to: "/rosters", label: "Department Rosters", icon: ClipboardList }] : []),
-    ...(hasPermission("evaluation.view_assigned") || hasPermission("evaluation.manage")
-      ? [{ to: "/evaluations", label: "Evaluations & Tasks", icon: ClipboardCheck }]
-      : []),
-    ...(hasPermission("reports.view") ? [{ to: "/reports", label: "Reports & Analytics", icon: PieChart }] : []),
-    ...(hasPermission("audit.view") ? [{ to: "/audit-logs", label: "Audit Ledger", icon: ShieldAlert }] : []),
-  ];
-
   return (
     <div
       className={`min-h-screen flex font-sans transition-colors ${
-        isDarkMode ? "bg-[#070b13] text-slate-100" : "bg-[#f8fafc] text-slate-900"
+        isDarkMode ? "bg-[#0B1020] text-slate-100" : "bg-[#f8fafc] text-slate-900"
       }`}
     >
       {/* Mobile Sidebar Overlay Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md lg:hidden animate-in fade-in"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* ========================================================================= */}
-      {/* 1. SIDEBAR (With Full Mahibere Kidusan Branding on Top)                   */}
+      {/* 1. SIDEBAR (IT Park / Cortex Dark Navy Aesthetic Match)                   */}
+      {/* Width: 280px (17.5rem) | Background: #111A2E | Border: #263653            */}
       {/* ========================================================================= */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col shrink-0 transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-70 flex flex-col shrink-0 transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${
           isDarkMode
-            ? "text-white border-r border-[#1e293b]"
+            ? "bg-[#111A2E] text-white border-r border-[#263653] shadow-2xl"
             : "bg-white text-slate-800 border-r border-slate-200 shadow-sm"
         }`}
-        style={
-          isDarkMode
-            ? {
-                background: "linear-gradient(180deg, #090d16 0%, #0f172a 40%, #1e1b4b 100%)",
-                borderRight: "1px solid rgba(99, 102, 241, 0.25)",
-                boxShadow: "4px 0 24px rgba(15, 23, 42, 0.6)",
-              }
-            : undefined
-        }
+        style={{
+          width: "17.5rem",
+          minWidth: "17.5rem",
+        }}
       >
-        {/* Top of Sidebar: Official Mahibere Kidusan & C-CIMAS System Branding */}
+        {/* Top of Sidebar: Brand Header */}
         <div
           className={`p-4 relative border-b ${
-            isDarkMode ? "border-[#1e293b]" : "border-slate-200 bg-slate-50/70"
+            isDarkMode ? "border-[#263653] bg-[#0E1526]/80" : "border-slate-200 bg-slate-50/70"
           }`}
         >
           {/* Mobile close button */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className={`absolute top-3 right-3 p-1 rounded-lg lg:hidden ${
-              isDarkMode
-                ? "text-slate-400 hover:text-white hover:bg-slate-800"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200"
-            }`}
+            className="absolute top-3 right-3 p-1 rounded-lg lg:hidden text-slate-400 hover:text-white hover:bg-slate-800"
             title="Close menu"
           >
             <X className="w-5 h-5" />
@@ -362,177 +444,194 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             <img
               src="/assets/mahibere-kidusan-circle.png"
               alt="Mahibere Kidusan Logo"
-              className="w-11 h-11 rounded-full object-contain shrink-0 shadow-lg border-2 border-amber-400/70 bg-white/10 p-0.5"
-              style={{ width: "44px", height: "44px" }}
+              className="w-10 h-10 rounded-full object-contain shrink-0 shadow-lg border border-amber-400/50 bg-white/10 p-0.5"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <h1
-                  className={`font-black text-base tracking-tight leading-tight ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}
-                >
+                <h1 className="font-extrabold text-base tracking-tight leading-tight text-white">
                   C-CIMAS
                 </h1>
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/40">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
                   ማ/ቅ
                 </span>
               </div>
-              <p
-                className={`text-[11px] font-semibold truncate ${
-                  isDarkMode ? "text-blue-300" : "text-blue-900"
-                }`}
-              >
+              <p className="text-[11px] font-semibold truncate text-purple-300 amharic-text">
                 ማኅበረ ቅዱሳን
               </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${
-                    isDarkMode
-                      ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
-                      : "bg-blue-100 text-blue-900 border-blue-300 font-extrabold"
-                  }`}
-                >
-                  {isAdmin ? "ADMIN PORTAL" : "EVALUATOR PORTAL"}
-                </span>
-              </div>
             </div>
           </div>
 
-          {/* Official Full Title Banner Pill on Top of Sidebar */}
+          {/* Official Subtitle Pill */}
           <div
-            className={`mt-3 px-2.5 py-2 rounded-xl text-center shadow-inner ${
+            className={`mt-3 px-3 py-2 rounded-xl text-center border ${
               isDarkMode
-                ? "bg-[#0b1220] border border-[#1e293b] text-blue-200"
-                : "bg-blue-50/80 border border-blue-200 text-blue-950"
+                ? "bg-[#17233B] border-[#263653] text-purple-200"
+                : "bg-purple-50 border-purple-200 text-purple-900"
             }`}
           >
-            <p className="text-[11px] font-bold leading-snug">
-              C-CIMAS · ማኅበረ ቅዱሳን የግቢ ጉባኤያት ምዝገባና ክፍል ክፍፍል አስተዳደር
+            <p className="text-[10px] font-bold leading-tight amharic-text">
+              የግቢ ጉባኤያት ምዝገባና ክፍል ክፍፍል
             </p>
-            <p
-              className={`text-[9px] font-medium mt-0.5 tracking-tight ${
-                isDarkMode ? "text-slate-400" : "text-slate-500"
-              }`}
-            >
-              Church Campus Registration & Intelligent Allocation
-            </p>
+            <div className="flex items-center justify-center gap-1.5 mt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                {isAdmin ? "Admin Portal" : "Evaluator Portal"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Active Campus Scope Pill */}
+        {/* Campus Tenancy Scope Pill */}
         <div
-          className={`px-4 py-3 text-xs border-b ${
+          className={`px-4 py-2.5 text-xs border-b flex items-center justify-between ${
             isDarkMode
-              ? "bg-[#060a12]/80 border-[#1e293b]"
-              : "bg-slate-50/80 border-slate-200"
+              ? "bg-[#0B1020]/90 border-[#263653]"
+              : "bg-slate-100 border-slate-200"
           }`}
         >
-          <span
-            className={`block uppercase font-semibold text-[10px] tracking-wider ${
-              isDarkMode ? "text-slate-400" : "text-slate-500"
-            }`}
-          >
-            Campus Tenancy
-          </span>
-          <span
-            className={`font-medium truncate block ${
-              isDarkMode ? "text-slate-200" : "text-slate-800"
-            }`}
-          >
-            {user?.campusName || "Global Oversight"}
-          </span>
+          <div className="min-w-0">
+            <span className="block uppercase font-bold text-[9px] tracking-wider text-slate-400">
+              Campus Scope
+            </span>
+            <span className="font-semibold text-xs text-white truncate block">
+              {user?.campusName || "Global / All Campuses"}
+            </span>
+          </div>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10B981]" />
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-          <div
-            className={`px-3 pt-1 pb-1 text-[10px] font-black uppercase tracking-wider ${
-              isDarkMode ? "text-slate-400" : "text-slate-600"
-            }`}
-          >
-            {language === "am" ? "ዋና ማውጫ" : "Main Navigation"}
-          </div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.to;
+        {/* 13 C-CIMAS Navigation Modules */}
+        <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+          {navSections.map((section, sIdx) => {
+            const visibleItems = section.items.filter((item) => item.visible);
+            if (visibleItems.length === 0) return null;
+
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
-                style={
-                  isActive
-                    ? {
-                        backgroundColor: "#2563eb",
-                        color: "#ffffff",
+              <div key={sIdx} className="space-y-1">
+                <div className="px-3 pt-1 pb-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  {section.groupTitle}
+                </div>
+
+                {visibleItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.to;
+
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={
+                        isActive
+                          ? {
+                              background: "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)",
+                              color: "#FFFFFF",
+                              boxShadow: "0 4px 16px rgba(139, 92, 246, 0.45)",
+                            }
+                          : undefined
                       }
-                    : undefined
-                }
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                  isActive
-                    ? "bg-blue-600 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white font-black shadow-lg shadow-blue-600/30"
-                    : isDarkMode
-                    ? "text-slate-400 hover:text-white hover:bg-slate-800/60 font-semibold"
-                    : "text-slate-700 hover:text-blue-950 hover:bg-slate-100 font-bold"
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 shrink-0 ${
-                    isActive
-                      ? "text-white"
-                      : isDarkMode
-                      ? "text-slate-400"
-                      : "text-slate-600"
-                  }`}
-                  style={isActive ? { color: "#ffffff" } : undefined}
-                />
-                <span
-                  className={isActive ? "text-white font-black" : ""}
-                  style={isActive ? { color: "#ffffff" } : undefined}
-                >
-                  {item.label}
-                </span>
-              </Link>
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
+                        isActive
+                          ? "text-white font-bold"
+                          : isDarkMode
+                          ? "text-slate-300 hover:text-white hover:bg-[#17233B]/80"
+                          : "text-slate-700 hover:text-purple-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Jewel-toned Semantic Icon Box */}
+                        <div
+                          style={
+                            isActive
+                              ? { backgroundColor: "rgba(255, 255, 255, 0.2)", color: "#FFFFFF" }
+                              : {
+                                  backgroundColor: `${item.color}1F`,
+                                  borderColor: `${item.color}4D`,
+                                  color: item.color,
+                                }
+                          }
+                          className="w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+
+                        <span className="truncate">
+                          {language === "am" ? item.amLabel : item.label}
+                        </span>
+                      </div>
+
+                      {/* Active indicator dot */}
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_#FFFFFF] shrink-0" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
+
+        {/* Sidebar Footer User Section */}
+        <div
+          className={`p-3 border-t flex items-center justify-between ${
+            isDarkMode ? "border-[#263653] bg-[#0E1526]" : "border-slate-200 bg-slate-50"
+          }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-md">
+              {getInitials(user?.fullName)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate leading-tight">
+                {user?.fullName || "Authenticated User"}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {user?.role || "Staff"}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={logout}
+            title="Log Out"
+            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </aside>
 
       {/* ========================================================================= */}
       {/* 2. MAIN CONTENT AREA & TOP NAVBAR                                         */}
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header Navbar */}
+        {/* Top Header Navbar with Glass Navy Effect */}
         <header
-          className={`h-16 px-4 md:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20 shadow-sm transition-colors border-b ${
+          className={`h-16 px-4 md:px-6 flex items-center justify-between shrink-0 sticky top-0 z-30 transition-colors border-b ${
             isDarkMode
-              ? "bg-[#0c121e]/95 backdrop-blur-md border-[#1e293b] text-white"
+              ? "bg-[#111A2E]/90 backdrop-blur-md border-[#263653] text-white"
               : "bg-white border-slate-200 text-slate-900"
           }`}
         >
-          {/* Left Side: Mobile Menu Button & Search Module */}
+          {/* Left Side: Mobile Toggle & Global Search */}
           <div className="flex items-center gap-3">
-            {/* Hamburger Menu Toggle (Mobile & Desktop) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               title="Toggle Menu"
-              className={`p-2 rounded-xl transition lg:hidden ${
-                isDarkMode
-                  ? "text-slate-400 hover:text-white hover:bg-slate-800"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-              }`}
+              className="p-2 rounded-xl transition lg:hidden text-slate-400 hover:text-white hover:bg-[#17233B]"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Search Module Input Bar (Matches Reference Project) */}
+            {/* Global Search Bar with Quick Navigate */}
             <div className="relative" ref={searchRef}>
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition w-44 sm:w-64 md:w-80 ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition w-44 sm:w-64 md:w-80 ${
                   isDarkMode
-                    ? "bg-[#0b1220] border-[#1e293b] text-slate-100"
+                    ? "bg-[#17233B] border-[#263653] text-slate-100 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20"
                     : "bg-white border-slate-300 text-slate-900 shadow-sm"
                 }`}
               >
@@ -542,39 +641,27 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
-                  placeholder={language === "am" ? "ሞጁል ይፈልጉ..." : "Search module..."}
-                  className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none"
+                  placeholder={language === "am" ? "ሞጁል ይፈልጉ..." : "Search C-CIMAS modules..."}
+                  className="w-full bg-transparent text-xs text-white placeholder:text-slate-400 focus:outline-none"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="text-slate-400 hover:text-white"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              {/* Search Module Dropdown Results */}
+              {/* Quick Jump Search Dropdown */}
               {searchFocused && (
                 <div
-                  className={`absolute left-0 mt-2 w-72 sm:w-80 md:w-96 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in border ${
-                    isDarkMode
-                      ? "bg-[#0b1220] border-[#1e293b] text-white"
-                      : "bg-white border-slate-200 text-slate-900"
-                  }`}
-                  style={{
-                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.5)",
-                  }}
+                  className="absolute left-0 mt-2 w-72 sm:w-80 md:w-96 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in border bg-[#17233B] border-[#263653] text-white"
+                  style={{ boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.7)" }}
                 >
-                  <div
-                    className={`px-3.5 py-1.5 border-b text-[10px] uppercase font-bold tracking-wider ${
-                      isDarkMode
-                        ? "border-[#1e293b] text-slate-400"
-                        : "border-slate-100 text-slate-400"
-                    }`}
-                  >
+                  <div className="px-3.5 py-1.5 border-b border-[#263653] text-[10px] uppercase font-bold tracking-wider text-slate-400">
                     {language === "am" ? "የስርዓት ሞጁሎች" : "Quick Navigate Modules"}
                   </div>
                   <div className="max-h-72 overflow-y-auto p-1.5 space-y-1">
@@ -592,18 +679,15 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                             }}
                             className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs transition ${
                               isCurrent
-                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold"
-                                : isDarkMode
-                                ? "text-slate-200 hover:bg-slate-800/80"
-                                : "text-slate-700 hover:bg-slate-100"
+                                ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold"
+                                : "text-slate-200 hover:bg-[#1E2C47]"
                             }`}
                           >
                             <div
-                              className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                              }`}
+                              style={{ backgroundColor: `${item.color}26`, color: item.color }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                             >
-                              <Icon className="w-4 h-4 text-blue-500" />
+                              <Icon className="w-4 h-4" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="font-semibold truncate">
@@ -618,7 +702,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       })
                     ) : (
                       <div className="p-4 text-center text-xs text-slate-400">
-                        {language === "am" ? "ምንም ሞጁል አልተገኘም" : "No modules found matching query"}
+                        {language === "am" ? "ምንም ሞጁል አልተገኘም" : "No modules found"}
                       </div>
                     )}
                   </div>
@@ -627,50 +711,30 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </div>
           </div>
 
-          {/* Right Side: Language, Theme Toggle, Chat, Notifications & User Avatar (Matches Image 2 & 3) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-            {/* 1. Language Selector Dropdown (Matches Reference Image 2 & 3) */}
+          {/* Right Side: Language, Theme, Notifications & User Avatar */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Language Selector */}
             <div className="relative" ref={langRef}>
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition border focus:outline-none ${
-                  isDarkMode
-                    ? "text-slate-200 hover:bg-slate-800 border-[#1e293b]"
-                    : "text-slate-800 hover:bg-slate-100 border-slate-200 shadow-sm bg-white"
-                }`}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition border border-[#263653] bg-[#17233B] text-slate-200 hover:bg-[#1E2C47]"
               >
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                    language === "am"
-                      ? isDarkMode
-                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                        : "bg-amber-100 text-amber-800 border border-amber-300"
-                      : isDarkMode
-                      ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                      : "bg-blue-100 text-blue-800 border border-blue-300"
-                  }`}
-                >
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   {language === "am" ? "አማ" : "EN"}
                 </span>
                 <span>{language === "am" ? "አማርኛ" : "English"}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                    langDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                    langDropdownOpen ? "rotate-180 text-purple-400" : ""
                   }`}
                 />
               </button>
 
-              {/* Language Dropdown List (Expanded style matching Image 3) */}
               {langDropdownOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#0b1220] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1e293b] py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-                  style={{
-                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.45)",
-                  }}
-                >
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-[#1e293b]">
-                    Select Language / ቋንቋ ይምረጡ
+                <div className="absolute right-0 mt-2 w-48 bg-[#17233B] rounded-2xl shadow-2xl border border-[#263653] py-1.5 z-50">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-[#263653]">
+                    Select Language / ቋንቋ
                   </div>
                   <div className="p-1 space-y-1">
                     {languages.map((lang) => {
@@ -682,31 +746,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                           onClick={() => handleSelectLanguage(lang.code)}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition ${
                             isSelected
-                              ? "bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 font-bold"
-                              : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium"
+                              ? "bg-purple-600/20 text-purple-300 font-bold"
+                              : "text-slate-200 hover:bg-[#1E2C47]"
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                                lang.code === "am"
-                                  ? isDarkMode
-                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                                    : "bg-amber-100 text-amber-800 border border-amber-300"
-                                  : isDarkMode
-                                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                                  : "bg-blue-100 text-blue-800 border border-blue-300"
-                              }`}
-                            >
-                              {lang.code === "am" ? "አማ" : "EN"}
-                            </span>
-                            <span>
-                              {lang.nativeName} ({lang.name})
-                            </span>
-                          </div>
-                          {isSelected && (
-                            <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                          )}
+                          <span>{lang.nativeName} ({lang.name})</span>
+                          {isSelected && <Check className="w-4 h-4 text-purple-400" />}
                         </button>
                       );
                     })}
@@ -715,188 +760,47 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               )}
             </div>
 
-            {/* 2. Black and White Theme Toggle (Dark / Light Mode) */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={isDarkMode ? "Switch to White / Light Mode" : "Switch to Black / Dark Mode"}
-              className={`p-2 rounded-xl transition border focus:outline-none ${
-                isDarkMode
-                  ? "text-amber-300 bg-slate-800/80 hover:bg-slate-800 border-[#1e293b] hover:text-amber-200 shadow-sm"
-                  : "text-amber-700 bg-amber-100 hover:bg-amber-200 border-amber-300 hover:text-amber-800 shadow-sm"
-              }`}
-            >
-              {isDarkMode ? (
-                <Moon className="w-4 h-4 text-blue-400" />
-              ) : (
-                <Sun className="w-4 h-4 text-amber-600" />
-              )}
-            </button>
-
-            {/* 3. Team & Ministry Discussion / Chat Button */}
-            <div className="relative" ref={chatRef}>
-              <button
-                type="button"
-                onClick={() => setChatOpen((prev) => !prev)}
-                title="Ministry Discussions & Notes"
-                className={`p-2 rounded-xl transition border focus:outline-none ${
-                  isDarkMode
-                    ? "text-slate-300 hover:text-white hover:bg-slate-800 border-[#1e293b]"
-                    : "text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border-slate-200 shadow-sm"
-                }`}
-              >
-                <MessageSquare className="w-4 h-4" />
-              </button>
-
-              {/* Chat Popover */}
-              {chatOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#0b1220] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1e293b] py-3 z-50 animate-in fade-in"
-                  style={{
-                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.45)",
-                  }}
-                >
-                  <div className="px-4 pb-2 border-b border-slate-100 dark:border-[#1e293b] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        {language === "am" ? "የአስተዳደርና የግምገማ ውይይት" : "Operations Coordination Channel"}
-                      </span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                      Live
-                    </span>
-                  </div>
-
-                  {/* Messages list */}
-                  <div className="max-h-60 overflow-y-auto p-3 space-y-2.5">
-                    {chatMessages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#0a1120] border border-slate-100 dark:border-[#1e293b]"
-                      >
-                        <div className="flex items-center justify-between text-[11px] mb-1">
-                          <span className="font-bold text-slate-900 dark:text-slate-200">
-                            {msg.sender}
-                          </span>
-                          <span className="text-[10px] text-slate-400">{msg.time}</span>
-                        </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-300">{msg.text}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Quick message input */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!newChatMessage.trim()) return;
-                      setChatMessages((prev) => [
-                        ...prev,
-                        {
-                          id: `m_${Date.now()}`,
-                          sender: user?.fullName || "Staff",
-                          role: user?.role || "ADMIN",
-                          text: newChatMessage.trim(),
-                          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                        },
-                      ]);
-                      setNewChatMessage("");
-                    }}
-                    className="px-3 pt-2 border-t border-slate-100 dark:border-[#1e293b] flex items-center gap-2"
-                  >
-                    <input
-                      type="text"
-                      value={newChatMessage}
-                      onChange={(e) => setNewChatMessage(e.target.value)}
-                      placeholder={language === "am" ? "መልእክት ይጻፉ..." : "Post team note..."}
-                      className="flex-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#0a1120] border border-slate-200 dark:border-[#1e293b] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newChatMessage.trim()}
-                      className="px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold transition disabled:opacity-50"
-                    >
-                      {language === "am" ? "ላክ" : "Send"}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            {/* 4. Notification Bell with Badge (Matches Reference Image 2) */}
+            {/* Notifications Center */}
             <div className="relative" ref={notifRef}>
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((prev) => !prev)}
                 title="Notifications"
-                className={`p-2 rounded-xl transition border focus:outline-none relative ${
-                  isDarkMode
-                    ? "text-slate-300 hover:text-white hover:bg-slate-800 border-[#1e293b]"
-                    : "text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border-slate-200 shadow-sm"
-                }`}
+                className="relative p-2 rounded-xl border border-[#263653] bg-[#17233B] text-slate-300 hover:text-white hover:bg-[#1E2C47] transition-colors"
               >
                 <Bell className="w-4 h-4" />
                 {unreadNotifCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse ring-2 ring-white dark:ring-slate-900">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                     {unreadNotifCount}
                   </span>
                 )}
               </button>
 
-              {/* Notifications Dropdown Card */}
               {notificationsOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#0b1220] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1e293b] py-3 z-50 animate-in fade-in"
-                  style={{
-                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.45)",
-                  }}
-                >
-                  <div className="px-4 pb-2 border-b border-slate-100 dark:border-[#1e293b] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        {language === "am" ? "ማስታወቂያዎች" : "Notifications"}
-                      </span>
-                      {unreadNotifCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                          {unreadNotifCount} {language === "am" ? "አዲስ" : "new"}
-                        </span>
-                      )}
-                    </div>
-                    {unreadNotifCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUnreadNotifCount(0);
-                          setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-                        }}
-                        className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        {language === "am" ? "ሁሉንም አንብብ" : "Mark all read"}
-                      </button>
-                    )}
+                <div className="absolute right-0 mt-2 w-80 bg-[#17233B] rounded-2xl shadow-2xl border border-[#263653] py-2 z-50">
+                  <div className="px-4 py-2 border-b border-[#263653] flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Notifications
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setUnreadNotifCount(0)}
+                      className="text-[10px] text-purple-400 hover:underline"
+                    >
+                      Mark all read
+                    </button>
                   </div>
-
-                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {notifications.map((notif) => (
+                  <div className="max-h-72 overflow-y-auto p-2 space-y-2">
+                    {notifications.map((n) => (
                       <div
-                        key={notif.id}
-                        className={`p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
-                          !notif.read ? "bg-blue-50/40 dark:bg-blue-950/20" : ""
-                        }`}
+                        key={n.id}
+                        className="p-2.5 rounded-xl bg-[#1E2C47]/80 border border-[#263653] text-xs hover:border-purple-500/40 transition"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                            {notif.title}
-                          </h4>
-                          <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                            {notif.time}
-                          </span>
+                        <div className="font-semibold text-white flex items-center justify-between">
+                          <span>{n.title}</span>
+                          <span className="text-[10px] text-slate-400">{n.time}</span>
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                          {notif.description}
-                        </p>
+                        <p className="text-[11px] text-slate-300 mt-0.5">{n.description}</p>
                       </div>
                     ))}
                   </div>
@@ -904,75 +808,48 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               )}
             </div>
 
-            {/* 5. User Profile Dropdown (Matches Reference Image 2) */}
+            {/* User Profile Pill & Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className={`flex items-center gap-2 p-1 pr-2 rounded-full transition border focus:outline-none ${
-                  isDarkMode
-                    ? "hover:bg-slate-800 border-transparent hover:border-[#1e293b]"
-                    : "bg-white hover:bg-slate-50 border-slate-200 shadow-sm"
-                }`}
+                onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border border-[#263653] bg-[#17233B] hover:bg-[#1E2C47] transition text-left"
               >
-                {/* User Avatar with Photo or Initials & Status Dot */}
-                <div className="relative">
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt={user.fullName}
-                      className="w-8 h-8 rounded-full object-cover border border-blue-900/40 shadow-sm"
-                    />
-                  ) : (
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-sm"
-                      style={{
-                        background: "linear-gradient(135deg, #090d16 0%, #1e3a8a 100%)",
-                      }}
-                    >
-                      {getInitials(user?.fullName)}
-                    </div>
-                  )}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#0b1329] rounded-full shadow-sm" />
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 text-white font-bold text-xs flex items-center justify-center shadow-md">
+                  {getInitials(user?.fullName)}
                 </div>
-
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                    profileDropdownOpen ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
-                  }`}
-                />
+                <div className="hidden sm:block text-left">
+                  <span className="text-xs font-bold text-white block leading-tight">
+                    {user?.fullName?.split(" ")[0] || "User"}
+                  </span>
+                  <span className="text-[9px] text-purple-400 font-semibold block uppercase">
+                    {user?.role || "Staff"}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
-              {/* Profile Dropdown Menu Card (Layout & Styling Exactly Matching Image 2) */}
               {profileDropdownOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#0b1220] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#1e293b] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-                  style={{
-                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.45)",
-                  }}
-                >
-                  {/* Dropdown User Summary Header */}
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1e293b]">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      {user?.fullName || "Admin User"}
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate mt-0.5">
-                      {user?.email || "admin@c-cimas.org"}
-                    </div>
+                <div className="absolute right-0 mt-2 w-56 bg-[#17233B] rounded-2xl shadow-2xl border border-[#263653] py-2 z-50">
+                  <div className="px-4 py-2 border-b border-[#263653]">
+                    <p className="text-xs font-bold text-white">{user?.fullName}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
+                    <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                      {user?.role}
+                    </span>
                   </div>
 
-                  {/* Dropdown Menu Actions */}
-                  <div className="p-1 space-y-0.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <div className="p-1 space-y-1">
                     <button
                       type="button"
                       onClick={() => {
                         setProfileDropdownOpen(false);
                         setShowProfileModal(true);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-[#1E2C47] transition"
                     >
-                      <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                      <span>My Profile</span>
+                      <User className="w-4 h-4 text-purple-400" />
+                      <span>Account Profile</span>
                     </button>
 
                     <button
@@ -981,27 +858,23 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         setProfileDropdownOpen(false);
                         setShowPasswordModal(true);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400 transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-[#1E2C47] transition"
                     >
-                      <Key className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <Key className="w-4 h-4 text-blue-400" />
                       <span>Change Password</span>
                     </button>
-                  </div>
 
-                  {/* Divider */}
-                  <div className="border-t border-slate-100 dark:border-[#1e293b] my-1" />
+                    <div className="border-t border-[#263653] my-1" />
 
-                  {/* Sign Out Button */}
-                  <div className="p-1">
                     <button
                       type="button"
                       onClick={() => {
                         setProfileDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition"
                     >
-                      <LogOut className="w-4 h-4 text-rose-600" />
+                      <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
                     </button>
                   </div>
@@ -1011,60 +884,67 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">{children}</main>
+        {/* Main Application Body Canvas */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
+          {children}
+        </main>
+
+        {/* Professional SaaS Footer */}
+        <footer className="border-t border-[#263653] bg-[#0E1526]/80 px-6 py-4 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-center sm:text-left">
+            <span className="font-bold text-white">C-CIMAS v2.4.0 Enterprise</span>
+            <span>•</span>
+            <span className="amharic-text text-purple-300">
+              ማኅበረ ቅዱሳን የግቢ ጉባኤያት ምዝገባና ክፍል ክፍፍል አስተዳደር ሥርዓት
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              All Systems Operational (PostgreSQL Connected)
+            </span>
+            <span>© 2026 Mahibere Kidusan</span>
+          </div>
+        </footer>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 3. CHANGE PASSWORD MODAL                                                  */}
-      {/* ========================================================================= */}
+      {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="max-w-md w-full bg-white dark:bg-[#0b1220] rounded-3xl shadow-2xl border border-slate-200 dark:border-[#1e293b] overflow-hidden relative">
-            {/* Top Gold Trim */}
-            <div
-              className="h-2 w-full"
-              style={{
-                background: "linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #f59e0b 100%)",
-              }}
-            />
+        <div className="cimas-modal-overlay" onClick={() => setShowPasswordModal(false)}>
+          <div className="cimas-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cimas-modal__header">
+              <h3 className="cimas-modal__title">
+                <Key className="w-4 h-4 text-purple-400" />
+                Change Account Password
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-700 dark:text-amber-400">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Change Password</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Update your account credentials</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowPasswordModal(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
+            <div className="cimas-modal__body">
               {passwordError && (
-                <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-300 font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                   <span>{passwordError}</span>
                 </div>
               )}
 
               {passwordSuccess && (
-                <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <div className="mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
                   <span>{passwordSuccess}</span>
                 </div>
               )}
 
-              <form onSubmit={handleChangePasswordSubmit} className="space-y-3.5">
+              <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
                     Current Password
                   </label>
                   <div className="relative">
@@ -1074,12 +954,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                      className="w-full px-3 py-2.5 pr-10 rounded-xl border border-[#263653] bg-[#1E2C47] text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPass(!showCurrentPass)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
                     >
                       {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -1087,7 +967,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
                     New Password (Min 6 Characters)
                   </label>
                   <div className="relative">
@@ -1097,12 +977,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                      className="w-full px-3 py-2.5 pr-10 rounded-xl border border-[#263653] bg-[#1E2C47] text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPass(!showNewPass)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
                     >
                       {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -1110,7 +990,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
                     Confirm New Password
                   </label>
                   <input
@@ -1119,7 +999,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter new password"
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[#263653] bg-[#1E2C47] text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   />
                 </div>
 
@@ -1127,14 +1007,14 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <button
                     type="button"
                     onClick={() => setShowPasswordModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={passwordLoading}
-                    className="px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow-md shadow-blue-900/30 transition disabled:opacity-50"
+                    className="cimas-btn cimas-btn--primary cimas-btn--sm"
                   >
                     {passwordLoading ? "Updating Password..." : "Update Password"}
                   </button>
@@ -1145,9 +1025,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. PROFESSIONAL ACCOUNT PROFILE MODAL (User, Personal, Address, Role, Photo)*/}
-      {/* ========================================================================= */}
+      {/* Account Profile Modal */}
       <AccountProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}

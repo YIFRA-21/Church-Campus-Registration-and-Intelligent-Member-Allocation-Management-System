@@ -1,0 +1,20 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: FUNCTIONS
+// ============================================================================
+@use "sass:color";
+@use "sass:math";
+
+// Calculate tint (mix color with white)
+@function tint($color, $percentage) {
+  @return color.mix(white, $color, $percentage);
+}
+
+// Calculate shade (mix color with black)
+@function shade($color, $percentage) {
+  @return color.mix(black, $color, $percentage);
+}
+
+// Convert px to rem
+@function rem($px, $base: 16px) {
+  @return math.div($px, $base) * 1rem;
+}

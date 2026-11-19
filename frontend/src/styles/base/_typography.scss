@@ -1,0 +1,78 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: TYPOGRAPHY
+// ============================================================================
+@use "../abstracts/variables" as *;
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Ethiopic", sans-serif;
+  color: $text-primary;
+}
+
+// Crisp Heading Hierarchy
+h1, .cimas-h1 {
+  font-size: 1.875rem; // 30px
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: $text-primary;
+}
+
+h2, .cimas-h2 {
+  font-size: 1.5rem; // 24px
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: $text-primary;
+}
+
+h3, .cimas-h3 {
+  font-size: 1.25rem; // 20px
+  font-weight: 600;
+  line-height: 1.35;
+  color: $text-primary;
+}
+
+h4, .cimas-h4 {
+  font-size: 1.125rem; // 18px
+  font-weight: 600;
+  line-height: 1.4;
+  color: $text-primary;
+}
+
+h5, .cimas-h5 {
+  font-size: 1rem; // 16px
+  font-weight: 600;
+  line-height: 1.45;
+  color: $text-secondary;
+}
+
+// Subtitles & Descriptions
+.cimas-subtitle {
+  font-size: 0.875rem; // 14px
+  color: $text-secondary;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.cimas-meta {
+  font-size: 0.75rem; // 12px
+  color: $text-muted;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+// Big Metric KPI Numbers
+.cimas-stat-number {
+  font-size: 2.25rem; // 36px
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  font-feature-settings: "tnum";
+}
+
+// Amharic script styling support
+.amharic-text {
+  font-family: "Noto Sans Ethiopic", "Abyssinica SIL", "Nyala", -apple-system, sans-serif;
+  letter-spacing: 0.01em;
+}

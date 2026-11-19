@@ -1,0 +1,185 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: CARDS & STAT PANELS
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cimas-card {
+  @include glass-card($bg-card, $border-color);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  &--elevated {
+    background: $bg-card-elevated;
+    border-color: rgba(38, 54, 83, 0.9);
+    box-shadow: $shadow-elevated;
+  }
+
+  &--interactive {
+    cursor: pointer;
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  &__header {
+    @include flex-between;
+    margin-bottom: 1.25rem;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  &__subtitle {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+    margin-top: 0.25rem;
+  }
+
+  &__body {
+    position: relative;
+  }
+}
+
+// KPI Dashboard Stat Card (Matches the visitor management and cortex reference)
+.cimas-stat-card {
+  position: relative;
+  overflow: hidden;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-2xl;
+  padding: 1.25rem 1.5rem;
+  transition: all $transition-smooth;
+  box-shadow: $shadow-card;
+
+  // Ambient top border glow matching module accent
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background $transition-normal;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139, 92, 246, 0.45);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.15);
+  }
+
+  &__top {
+    @include flex-between;
+    margin-bottom: 0.75rem;
+  }
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__icon-box {
+    @include flex-center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $radius-xl;
+    transition: transform $transition-normal;
+  }
+
+  &:hover &__icon-box {
+    transform: scale(1.08);
+  }
+
+  &__value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+
+  // Accent Variations
+  &--blue {
+    &::before { background: linear-gradient(90deg, #3B82F6, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3B82F6;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+  }
+
+  &--purple {
+    &::before { background: linear-gradient(90deg, #8B5CF6, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(139, 92, 246, 0.15);
+      color: #8B5CF6;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+  }
+
+  &--cyan {
+    &::before { background: linear-gradient(90deg, #06B6D4, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(6, 182, 212, 0.15);
+      color: #06B6D4;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+  }
+
+  &--green {
+    &::before { background: linear-gradient(90deg, #10B981, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+  }
+
+  &--orange {
+    &::before { background: linear-gradient(90deg, #F59E0B, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+  }
+
+  &--pink {
+    &::before { background: linear-gradient(90deg, #EC4899, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(236, 72, 153, 0.15);
+      color: #EC4899;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+    }
+  }
+
+  &--indigo {
+    &::before { background: linear-gradient(90deg, #6366F1, transparent); }
+    .cimas-stat-card__icon-box {
+      background: rgba(99, 102, 241, 0.15);
+      color: #6366F1;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  }
+}

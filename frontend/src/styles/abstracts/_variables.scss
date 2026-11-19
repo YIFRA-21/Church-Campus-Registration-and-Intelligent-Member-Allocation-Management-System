@@ -1,0 +1,87 @@
+// ============================================================================
+// C-CIMAS SCSS MASTER DESIGN SYSTEM: VARIABLES & TOKENS
+// High-Definition Enterprise SaaS Dark Navy Palette
+// ============================================================================
+
+// --- Surface & Canvas Palettes (Visitor Management System Match) ---
+$bg-main: #0B1020;            // Deep Navy Application Canvas
+$bg-sidebar: #111A2E;         // Modern Dark Navy Sidebar
+$bg-card: #17233B;            // Standard Panel & Card Surface
+$bg-card-elevated: #1E2C47;   // Elevated Card, Modal, Tooltip Surface
+$bg-card-hover: #223252;      // Hover State for Cards
+$border-color: #263653;       // Crisp Architectural Card & Grid Border
+$border-color-focus: #3B82F6; // Active / Focus Border Glow
+$border-color-subtle: rgba(255, 255, 255, 0.08);
+
+// --- Brand & Accent Gradients ---
+$primary-purple: #8B5CF6;     // Accent Purple
+$primary-blue: #3B82F6;       // Accent Blue
+$grad-primary: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+$grad-primary-hover: linear-gradient(135deg, #9D74FF 0%, #4E95FF 100%);
+$grad-sidebar-active: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.3) 100%);
+$grad-card-glow: linear-gradient(180deg, rgba(38, 54, 83, 0.6) 0%, rgba(23, 35, 59, 0.95) 100%);
+
+// --- Semantic Module Colors ---
+$color-campus: #3B82F6;       // Module 1: Campus Management (Blue)
+$color-department: #8B5CF6;   // Module 2: Department Management (Purple)
+$color-members: #06B6D4;      // Module 3: Member Management (Cyan)
+$color-import: #F59E0B;       // Module 4: Excel Import & Validation (Orange)
+$color-eligibility: #14B8A6;  // Module 5: Eligibility Management (Teal)
+$color-capacity: #EAB308;     // Module 6: Capacity Management (Yellow)
+$color-allocation: #6366F1;   // Module 7: Allocation Engine (Indigo)
+$color-approval: #10B981;     // Module 8: Allocation Approval (Green)
+$color-reassignment: #EC4899; // Module 9: Reassignment (Pink)
+$color-evaluation: #7C3AED;   // Module 10: Evaluation & Tasks (Violet)
+$color-reports: #0284C7;      // Module 11: Reports & Analytics (Sky Blue)
+$color-audit: #64748B;        // Module 12: Audit & History (Slate)
+
+// --- System Status & Indicator Colors ---
+$status-success: #10B981;     // Active, Verified, Completed
+$status-warning: #F59E0B;     // On-Hold, Pending Review, Inactive
+$status-danger: #EF4444;      // Suspended, Rejected, Flagged
+$status-info: #06B6D4;        // Draft, Info, Processing
+$status-purple: #8B5CF6;      // Specialized, Custom
+
+// --- Typography Colors (High Contrast, No Washout) ---
+$text-primary: #F8FAFC;       // Sharp Headings, Metrics & Primary Labels
+$text-secondary: #94A3B8;     // Descriptive Subtitles & Table Headers
+$text-muted: #64748B;         // Metadata, Timestamps & Placeholders
+$text-disabled: #475569;      // Inactive Elements
+
+// --- Shadows & Atmospheric Glows ---
+$shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+$shadow-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+$shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+$glow-purple: 0 0 20px rgba(139, 92, 246, 0.35);
+$glow-blue: 0 0 20px rgba(59, 130, 246, 0.35);
+$glow-cyan: 0 0 20px rgba(6, 182, 212, 0.35);
+$glow-green: 0 0 20px rgba(16, 185, 129, 0.35);
+
+// --- Borders & Radii ---
+$radius-sm: 0.375rem;   // 6px
+$radius-md: 0.5rem;     // 8px
+$radius-lg: 0.75rem;    // 12px
+$radius-xl: 1rem;       // 16px
+$radius-2xl: 1.25rem;   // 20px
+$radius-3xl: 1.5rem;    // 24px
+$radius-full: 9999px;
+
+// --- Motion & Transitions ---
+$ease-bounce: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+$transition-instant: 120ms $ease-smooth;
+$transition-fast: 150ms $ease-smooth;
+$transition-normal: 220ms $ease-smooth;
+$transition-base: 220ms $ease-smooth;
+$transition-smooth: 320ms $ease-bounce;
+$transition-slow: 400ms $ease-bounce;
+
+// --- Z-Index Hierarchy ---
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+$z-toast: 1080;
