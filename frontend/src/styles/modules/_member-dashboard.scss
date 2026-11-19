@@ -1,0 +1,95 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: MODULES - MEMBER DASHBOARD (CORTEX STYLE)
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cortex-dashboard-layout {
+  min-height: 100vh;
+  background-color: $cimas-bg-canvas;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+  color: $cimas-text-primary;
+  padding-bottom: 3rem;
+
+  .dashboard-top-nav {
+    @include flex-between;
+    padding: 1.5rem 0 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 1.5rem;
+
+    .nav-title-group {
+      .page-title {
+        font-size: 1.65rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: #ffffff;
+      }
+      .page-desc {
+        font-size: 0.8rem;
+        color: $cimas-text-secondary;
+        margin-top: 0.25rem;
+      }
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .date-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.95rem;
+        border-radius: $cimas-radius-xl;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid $cimas-border-glass;
+        font-size: 0.775rem;
+        font-weight: 600;
+        color: $cimas-text-secondary;
+
+        i {
+          color: $cimas-primary-light;
+        }
+      }
+    }
+  }
+
+  // Dashboard Sub-navigation Tabs (Overview vs Directory)
+  .cortex-nav-pills {
+    display: inline-flex;
+    padding: 0.35rem;
+    border-radius: $cimas-radius-xl;
+    background: rgba(11, 18, 32, 0.7);
+    border: 1px solid $cimas-border-glass;
+    margin-bottom: 1.75rem;
+
+    .pill-btn {
+      padding: 0.45rem 1.15rem;
+      border-radius: $cimas-radius-lg;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: $cimas-text-secondary;
+      background: transparent;
+      border: none;
+      transition: all $cimas-transition-fast;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+
+      &:hover {
+        color: #ffffff;
+      }
+
+      &.active {
+        background: $cimas-primary;
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+// ============================================================================
+// C-CIMAS SCSS DESIGN SYSTEM: COMPONENTS - BUTTONS
+// ============================================================================
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.cortex-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: $cimas-radius-xl;
+  font-size: 0.825rem;
+  font-weight: 700;
+  transition: all $cimas-transition-fast;
+  cursor: pointer;
+  border: 1px solid transparent;
+  line-height: 1.4;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  // --- Primary (Glowing Violet/Indigo Pill) ---
+  &--primary {
+    background: $cimas-grad-active-pill;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.65);
+      filter: brightness(1.1);
+      color: #ffffff;
+    }
+  }
+
+  // --- Secondary (Translucent Glass) ---
+  &--secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: $cimas-border-glass;
+    color: $cimas-text-primary;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: $cimas-border-glass-hover;
+      color: #ffffff;
+    }
+  }
+
+  // --- Icon Action Button ---
+  &--icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border-radius: $cimas-radius-lg;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid $cimas-border-glass;
+    color: $cimas-text-secondary;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+  }
+}
