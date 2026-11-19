@@ -4,10 +4,8 @@ import { fetchCampuses } from "../api/campus.api";
 import { Campus } from "../types/campus";
 import {
   ImportBatch,
-  ImportColumnMapping,
   ImportValidationError,
   ImportDuplicateCandidate,
-  ImportRow,
   DuplicateReviewDecision,
 } from "../types/import";
 import {
@@ -18,11 +16,9 @@ import {
   fetchBatchById,
   fetchBatchPreview,
   saveColumnMappings,
-  runBatchValidation,
   fetchValidationResults,
   fetchDuplicateCandidates,
   submitDuplicateReview,
-  fetchStagedRecords,
   approveBatch,
   processApprovedBatch,
   retryBatchProcessing,
@@ -38,11 +34,7 @@ import {
   AlertTriangle,
   Building2,
   History,
-  FileCheck2,
-  Eye,
   RefreshCw,
-  Search,
-  Filter,
   Check,
   ChevronRight,
   ShieldAlert,
@@ -55,6 +47,14 @@ import {
   Lock,
   Clock,
   Sparkles,
+  X,
+  Eye,
+  FileText,
+  UserCheck,
+  UserX,
+  HelpCircle,
+  CheckCheck,
+  BarChart3,
 } from "lucide-react";
 
 // Canonical 17 Module 3 member fields with Amharic labels and categories
@@ -121,7 +121,7 @@ export const ExcelImportPage: React.FC = () => {
   const [isProcessingLive, setIsProcessingLive] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
 
-  // 1. Initial Load of Campuses and History
+  // Initial Load of Campuses and History
   useEffect(() => {
     async function init() {
       if (!token) return;
@@ -173,7 +173,6 @@ export const ExcelImportPage: React.FC = () => {
       const refreshed = await fetchBatchById(batchId, token);
       setActiveBatch(refreshed);
 
-      // Load preview / mappings
       try {
         const preview = await fetchBatchPreview(batchId, token);
         if (preview.mappings) {
@@ -188,10 +187,9 @@ export const ExcelImportPage: React.FC = () => {
           setSampleRows(preview.sampleRows);
         }
       } catch {
-        // May not have mappings yet
+        // Mappings might not be established yet
       }
 
-      // Load validation errors
       try {
         const valRes = await fetchValidationResults(batchId, token);
         setValidationErrors(valRes.errors || []);
@@ -199,7 +197,6 @@ export const ExcelImportPage: React.FC = () => {
         setValidationErrors([]);
       }
 
-      // Load duplicates
       try {
         const dupRes = await fetchDuplicateCandidates(batchId, token);
         setDuplicateCandidates(dupRes.candidates || []);
@@ -315,7 +312,6 @@ export const ExcelImportPage: React.FC = () => {
   const handleSaveMappings = async () => {
     if (!token || !activeBatch) return;
 
-    // Check required fields
     const mappedTargets = Object.values(currentMappings);
     if (!mappedTargets.includes("full_name")) {
       setError("Required field 'Full Name' (ሙሉ ስም) must be mapped before validating.");
@@ -455,520 +451,605 @@ export const ExcelImportPage: React.FC = () => {
   }, [validationErrors, errorFilterSeverity]);
 
   return (
-    <div className="page-import">
-      {/* 1. Header Banner */}
-      <div className="import-header-card">
-        <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 pb-16 transition-colors">
+      {/* 1. HIGH-DEFINITION EXECUTIVE HERO COMMAND BANNER */}
+      <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/70 border border-slate-800 border-t-2 border-t-indigo-500 shadow-2xl p-6 sm:p-8">
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <span className="badge rounded-pill bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30 px-3 py-1 text-uppercase fw-bold" style={{ fontSize: "0.6875rem" }}>
-                <FileSpreadsheet size={13} className="me-1 inline" />
-                Module 4: Import & Validation Management
-              </span>
-              <span className="badge rounded-pill bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                RFC 4180 CSV Engine
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold mb-3 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Module 4 &bull; Member Import &amp; Data Validation Suite</span>
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px]">
+                RFC 4180 CSV
               </span>
             </div>
-            <h1 className="h3 fw-bold text-white mb-1">
-              Member Import & Data Validation Suite
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 flex-shrink-0">
+                <FileSpreadsheet className="w-6 h-6" />
+              </div>
+              <span>Member Import &amp; Validation Suite</span>
             </h1>
-            <p className="text-secondary mb-0" style={{ fontSize: "0.875rem" }}>
-              ማኅበረ ቅዱሳን የግቢ ጉባኤያት አባላት ዳታ ማስገቢያና ማረጋገጫ ሥርዓት · Single-campus integrity, SHA-256 verification, column mapping, and duplicate review center.
+            <p className="mt-2 text-slate-300 text-sm sm:text-base max-w-3xl leading-relaxed">
+              ማኅበረ ቅዱሳን የግቢ ጉባኤያት አባላት ዳታ ማስገቢያና ማረጋገጫ ሥርዓት &bull; Single-campus membership enforcement, SHA-256 cryptographic integrity, intelligent column mapping, and duplicate review gateway.
             </p>
           </div>
 
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            {/* Campus Picker */}
-            <div className="d-flex align-items-center gap-2 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 px-3 py-2">
-              <Building2 size={16} className="text-primary" />
-              <div className="text-start">
-                <div className="text-secondary" style={{ fontSize: "0.625rem", textTransform: "uppercase" }}>
-                  Active Campus
-                </div>
-                <select
-                  value={selectedCampusId}
-                  onChange={(e) => setSelectedCampusId(e.target.value)}
-                  className="bg-transparent text-white border-0 p-0 fw-bold"
-                  style={{ fontSize: "0.8125rem", outline: "none", cursor: "pointer" }}
-                >
-                  {campuses.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-dark text-white">
-                      {c.name} ({c.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Quick Actions & Campus Filter */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Campus Selector */}
+            <div className="relative">
+              <select
+                value={selectedCampusId}
+                onChange={(e) => setSelectedCampusId(e.target.value)}
+                className="bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-md cursor-pointer"
+              >
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                    {c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Template Download Actions */}
+            {/* CSV Template Download */}
             <button
               onClick={() => downloadCsvTemplate(token!)}
-              className="btn btn-outline-primary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-2"
-              title="Official UTF-8 CSV Template with English & Amharic Headers"
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-sm font-semibold shadow-md flex items-center gap-2 transition hover:border-slate-500 active:scale-95"
+              title="Download Official UTF-8 CSV Template with Amharic & English Headers"
             >
-              <Download size={15} />
+              <Download className="w-4 h-4 text-emerald-400" />
               <span>CSV Template</span>
             </button>
 
+            {/* Excel Reference Download */}
             <button
               onClick={() => downloadExcelTemplate(token!)}
-              className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-2"
-              title="Reference Excel Template"
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-sm font-semibold shadow-md flex items-center gap-2 transition hover:border-slate-500 active:scale-95"
+              title="Download Excel Reference Template"
             >
-              <Download size={15} />
+              <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
               <span>Excel Ref</span>
             </button>
+
+            {/* Refresh */}
+            <button
+              onClick={() => {
+                loadBatches();
+                if (activeBatch) loadBatchDeepDetails(activeBatch.id);
+              }}
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 transition shadow-md hover:border-slate-500 active:scale-95"
+              title="Refresh Ingestion Ledger"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : "text-slate-300"}`} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Alert Notices */}
-      {error && (
-        <div className="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-30 text-danger d-flex align-items-center justify-content-between p-3 rounded-3" role="alert">
-          <div className="d-flex align-items-center gap-2">
-            <AlertCircle size={18} />
-            <span style={{ fontSize: "0.8125rem" }}>{error}</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Flash Notifications */}
+        {error && (
+          <div className="rounded-xl bg-red-950/60 border border-red-800 p-4 text-red-200 text-sm flex items-center justify-between shadow-lg animate-scale-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <span className="font-medium">{error}</span>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button type="button" className="btn-close btn-close-white" onClick={() => setError(null)} />
+        )}
+
+        {successMsg && (
+          <div className="rounded-xl bg-emerald-950/60 border border-emerald-800 p-4 text-emerald-200 text-sm flex items-center justify-between shadow-lg animate-scale-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span className="font-medium">{successMsg}</span>
+            </div>
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-emerald-200">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* 2. SIX VIVID KPI METRIC CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Card 1: Total Batches */}
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-indigo-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Batches</span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Database className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-white tracking-tight">
+              {metrics.totalBatches}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
+              Across campus history
+            </div>
+          </div>
+
+          {/* Card 2: Staged Records */}
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-cyan-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Staged Records</span>
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <FileSpreadsheet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-cyan-400 tracking-tight">
+              {metrics.totalStaged.toLocaleString()}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+              5,000–50,000+ capacity
+            </div>
+          </div>
+
+          {/* Card 3: Clean & Imported */}
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-emerald-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Clean &amp; Ingested</span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-emerald-400 tracking-tight">
+              {metrics.totalImported.toLocaleString()}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Created in Module 3
+            </div>
+          </div>
+
+          {/* Card 4: Duplicate Review Queue */}
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-amber-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Duplicate Queue</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-amber-400 tracking-tight">
+              {metrics.totalPendingReviews}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+              Require admin decision
+            </div>
+          </div>
+
+          {/* Card 5: Completed Pipelines */}
+          <div className="rounded-2xl bg-slate-900/95 border border-slate-800 border-t-2 border-t-purple-500 p-4 sm:p-5 shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Completed</span>
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold text-purple-400 tracking-tight">
+              {metrics.completedBatches}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-purple-400 font-medium">
+              100% finished pipelines
+            </div>
+          </div>
         </div>
-      )}
 
-      {successMsg && (
-        <div className="alert alert-success bg-success bg-opacity-10 border border-success border-opacity-30 text-success d-flex align-items-center justify-content-between p-3 rounded-3" role="alert">
-          <div className="d-flex align-items-center gap-2">
-            <CheckCircle2 size={18} />
-            <span style={{ fontSize: "0.8125rem" }}>{successMsg}</span>
-          </div>
-          <button type="button" className="btn-close btn-close-white" onClick={() => setSuccessMsg(null)} />
+        {/* 3. MODERN HORIZONTAL TAB NAVIGATION BAR */}
+        <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-1.5 flex flex-wrap gap-2 shadow-inner">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 ${
+              activeTab === "dashboard"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Overview &amp; Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("upload")}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 ${
+              activeTab === "upload"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>CSV Upload</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("mapping")}
+            disabled={!activeBatch}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+              activeTab === "mapping"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <FileCode className="w-4 h-4" />
+            <span>Column Mapping</span>
+            {detectedHeaders.length > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-800 text-slate-200">
+                {detectedHeaders.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("validation")}
+            disabled={!activeBatch}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+              activeTab === "validation"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>Validation Diagnostic</span>
+            {validationErrors.length > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-rose-500/30 text-rose-300 font-bold">
+                {validationErrors.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("duplicates")}
+            disabled={!activeBatch}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+              activeTab === "duplicates"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Duplicate Review Center</span>
+            {duplicateCandidates.length > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-amber-500/30 text-amber-300 font-bold">
+                {duplicateCandidates.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("approval")}
+            disabled={!activeBatch}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+              activeTab === "approval"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <CheckCheck className="w-4 h-4" />
+            <span>Approval &amp; Ingestion</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition duration-150 ${
+              activeTab === "history"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>History &amp; Audit</span>
+            <span className="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-slate-800 text-slate-200">
+              {history.length}
+            </span>
+          </button>
         </div>
-      )}
 
-      {/* 2. Navigation Tabs Bar */}
-      <div className="import-tabs-bar">
-        <button
-          onClick={() => setActiveTab("dashboard")}
-          className={`import-tab-btn ${activeTab === "dashboard" ? "active" : ""}`}
-        >
-          <Layers size={16} />
-          <span>Overview</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("upload")}
-          className={`import-tab-btn ${activeTab === "upload" ? "active" : ""}`}
-        >
-          <UploadCloud size={16} />
-          <span>CSV Upload</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("mapping")}
-          disabled={!activeBatch}
-          className={`import-tab-btn ${activeTab === "mapping" ? "active" : ""}`}
-        >
-          <FileCode size={16} />
-          <span>Column Mapping</span>
-          {detectedHeaders.length > 0 && <span className="tab-badge">{detectedHeaders.length}</span>}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("validation")}
-          disabled={!activeBatch}
-          className={`import-tab-btn ${activeTab === "validation" ? "active" : ""}`}
-        >
-          <ShieldAlert size={16} />
-          <span>Validation Diagnostic</span>
-          {validationErrors.length > 0 && (
-            <span className="tab-badge bg-danger">{validationErrors.length}</span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("duplicates")}
-          disabled={!activeBatch}
-          className={`import-tab-btn ${activeTab === "duplicates" ? "active" : ""}`}
-        >
-          <Users size={16} />
-          <span>Duplicate Review Center</span>
-          {duplicateCandidates.length > 0 && (
-            <span className="tab-badge bg-warning text-dark">{duplicateCandidates.length}</span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("approval")}
-          disabled={!activeBatch}
-          className={`import-tab-btn ${activeTab === "approval" ? "active" : ""}`}
-        >
-          <CheckCircle2 size={16} />
-          <span>Approval & Processing</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`import-tab-btn ${activeTab === "history" ? "active" : ""}`}
-        >
-          <History size={16} />
-          <span>History & Audit</span>
-          <span className="tab-badge">{history.length}</span>
-        </button>
-      </div>
-
-      {/* 3. TAB 1: OVERVIEW DASHBOARD */}
-      {activeTab === "dashboard" && (
-        <div className="d-flex flex-column gap-4">
-          {/* KPI Grid */}
-          <div className="import-kpi-grid">
-            <div className="import-kpi-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="kpi-title">Total Batches</span>
-                <div className="kpi-icon-wrap bg-primary bg-opacity-20 text-primary">
-                  <Database size={16} />
-                </div>
-              </div>
-              <div className="kpi-val">{metrics.totalBatches}</div>
-              <div className="kpi-sub">Across campus history</div>
-            </div>
-
-            <div className="import-kpi-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="kpi-title">Staged Records</span>
-                <div className="kpi-icon-wrap bg-info bg-opacity-20 text-info">
-                  <FileSpreadsheet size={16} />
-                </div>
-              </div>
-              <div className="kpi-val">{metrics.totalStaged.toLocaleString()}</div>
-              <div className="kpi-sub">Total CSV rows staged</div>
-            </div>
-
-            <div className="import-kpi-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="kpi-title">Clean & Imported</span>
-                <div className="kpi-icon-wrap bg-success bg-opacity-20 text-success">
-                  <CheckCircle2 size={16} />
-                </div>
-              </div>
-              <div className="kpi-val text-success">{metrics.totalImported.toLocaleString()}</div>
-              <div className="kpi-sub">Created in Module 3</div>
-            </div>
-
-            <div className="import-kpi-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="kpi-title">Duplicate Queue</span>
-                <div className="kpi-icon-wrap bg-warning bg-opacity-20 text-warning">
-                  <AlertTriangle size={16} />
-                </div>
-              </div>
-              <div className="kpi-val text-warning">{metrics.totalPendingReviews}</div>
-              <div className="kpi-sub">Require admin review</div>
-            </div>
-
-            <div className="import-kpi-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="kpi-title">Completed Batches</span>
-                <div className="kpi-icon-wrap bg-purple bg-opacity-20 text-purple" style={{ color: "#A855F7" }}>
-                  <Sparkles size={16} />
-                </div>
-              </div>
-              <div className="kpi-val">{metrics.completedBatches}</div>
-              <div className="kpi-sub">100% finished pipelines</div>
-            </div>
-          </div>
-
-          {/* Active Batch Summary & Quick Pipeline Jumper */}
-          {activeBatch ? (
-            <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25">
-                <div>
-                  <div className="d-flex align-items-center gap-2 mb-1">
-                    <span className="badge bg-primary text-uppercase px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                      Active Batch: {activeBatch.status.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-secondary font-monospace" style={{ fontSize: "0.75rem" }}>
-                      ID: {activeBatch.id}
-                    </span>
+        {/* 4. TAB 1: OVERVIEW & DASHBOARD */}
+        {activeTab === "dashboard" && (
+          <div className="space-y-6">
+            {activeBatch ? (
+              <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        Active Staged Batch &bull; {activeBatch.status.replace(/_/g, " ")}
+                      </span>
+                      <span className="font-mono text-xs text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                        {activeBatch.id}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white tracking-tight">{activeBatch.fileName}</h3>
+                    <p className="mt-1 text-sm text-slate-300">
+                      Destination Campus: <strong className="text-white">{activeBatch.campusName}</strong> &bull; Size: {(activeBatch.fileSize / 1024).toFixed(1)} KB &bull; SHA-256 Checksum: <code className="text-cyan-400 text-xs">{activeBatch.fileChecksum?.substring(0, 20)}...</code>
+                    </p>
                   </div>
-                  <h4 className="h5 text-white fw-bold mb-0">{activeBatch.fileName}</h4>
-                  <div className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                    Campus: <strong className="text-white">{activeBatch.campusName}</strong> · Size: {(activeBatch.fileSize / 1024).toFixed(1)} KB · Checksum: <code className="text-info">{activeBatch.fileChecksum?.substring(0, 16)}...</code>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => downloadOriginalCsvFile(activeBatch.id, activeBatch.fileName, token!)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-sm font-semibold shadow-md flex items-center gap-2 transition hover:border-slate-500"
+                    >
+                      <Download className="w-4 h-4 text-cyan-400" />
+                      <span>Original CSV</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("upload")}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition active:scale-95"
+                    >
+                      <UploadCloud className="w-4 h-4" />
+                      <span>Upload New Batch</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="d-flex gap-2">
-                  <button
-                    onClick={() => setActiveTab("upload")}
-                    className="btn btn-primary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-1"
-                  >
-                    <UploadCloud size={14} />
-                    <span>Upload New CSV</span>
-                  </button>
-
-                  <button
-                    onClick={() => downloadOriginalCsvFile(activeBatch.id, activeBatch.fileName, token!)}
-                    className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-1"
-                  >
-                    <Download size={14} />
-                    <span>Original CSV</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Step Flow Indicators */}
-              <div className="row g-3 pt-4">
-                <div className="col-12 col-md-3">
+                {/* Step Flow Jumper Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                  {/* Step 1 */}
                   <div
                     onClick={() => setActiveTab("mapping")}
-                    className="p-3 rounded-3 border border-secondary border-opacity-25 bg-secondary bg-opacity-10 cursor-pointer hover:border-primary transition"
+                    className="rounded-xl bg-slate-950/70 border border-slate-800 p-5 hover:border-indigo-500 transition cursor-pointer group shadow-md"
                   >
-                    <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: "0.75rem" }}>
-                      <span>Step 1</span>
-                      <ChevronRight size={14} />
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                      <span className="font-bold uppercase tracking-wider text-indigo-400">Step 1</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-slate-500 group-hover:text-white" />
                     </div>
-                    <div className="fw-bold text-white mb-1">Column Mapping</div>
-                    <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                      {detectedHeaders.length > 0 ? `${detectedHeaders.length} columns detected` : "Configure fields"}
-                    </div>
+                    <h4 className="text-base font-bold text-white mb-1">Column Mapping</h4>
+                    <p className="text-xs text-slate-400">
+                      {detectedHeaders.length > 0 ? `${detectedHeaders.length} columns mapped` : "Map 17 member fields"}
+                    </p>
                   </div>
-                </div>
 
-                <div className="col-12 col-md-3">
+                  {/* Step 2 */}
                   <div
                     onClick={() => setActiveTab("validation")}
-                    className="p-3 rounded-3 border border-secondary border-opacity-25 bg-secondary bg-opacity-10 cursor-pointer hover:border-primary transition"
+                    className="rounded-xl bg-slate-950/70 border border-slate-800 p-5 hover:border-cyan-500 transition cursor-pointer group shadow-md"
                   >
-                    <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: "0.75rem" }}>
-                      <span>Step 2</span>
-                      <ChevronRight size={14} />
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                      <span className="font-bold uppercase tracking-wider text-cyan-400">Step 2</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-slate-500 group-hover:text-white" />
                     </div>
-                    <div className="fw-bold text-white mb-1">Row Validation</div>
-                    <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+                    <h4 className="text-base font-bold text-white mb-1">Row Validation</h4>
+                    <p className="text-xs text-slate-400">
                       {validationErrors.length > 0 ? (
-                        <span className="text-danger">{validationErrors.length} issues found</span>
+                        <span className="text-rose-400 font-bold">{validationErrors.length} errors to review</span>
                       ) : (
-                        <span className="text-success">Clean & ready</span>
+                        <span className="text-emerald-400 font-medium">Clean schema validation</span>
                       )}
-                    </div>
+                    </p>
                   </div>
-                </div>
 
-                <div className="col-12 col-md-3">
+                  {/* Step 3 */}
                   <div
                     onClick={() => setActiveTab("duplicates")}
-                    className="p-3 rounded-3 border border-secondary border-opacity-25 bg-secondary bg-opacity-10 cursor-pointer hover:border-primary transition"
+                    className="rounded-xl bg-slate-950/70 border border-slate-800 p-5 hover:border-amber-500 transition cursor-pointer group shadow-md"
                   >
-                    <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: "0.75rem" }}>
-                      <span>Step 3</span>
-                      <ChevronRight size={14} />
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                      <span className="font-bold uppercase tracking-wider text-amber-400">Step 3</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-slate-500 group-hover:text-white" />
                     </div>
-                    <div className="fw-bold text-white mb-1">Duplicate Review</div>
-                    <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
+                    <h4 className="text-base font-bold text-white mb-1">Duplicate Review</h4>
+                    <p className="text-xs text-slate-400">
                       {duplicateCandidates.length > 0 ? (
-                        <span className="text-warning">{duplicateCandidates.length} pending review</span>
+                        <span className="text-amber-400 font-bold">{duplicateCandidates.length} candidate decisions</span>
                       ) : (
-                        <span className="text-success">0 pending reviews</span>
+                        <span className="text-emerald-400 font-medium">0 duplicate conflicts</span>
                       )}
-                    </div>
+                    </p>
                   </div>
-                </div>
 
-                <div className="col-12 col-md-3">
+                  {/* Step 4 */}
                   <div
                     onClick={() => setActiveTab("approval")}
-                    className="p-3 rounded-3 border border-secondary border-opacity-25 bg-secondary bg-opacity-10 cursor-pointer hover:border-primary transition"
+                    className="rounded-xl bg-slate-950/70 border border-slate-800 p-5 hover:border-emerald-500 transition cursor-pointer group shadow-md"
                   >
-                    <div className="d-flex justify-content-between text-secondary mb-1" style={{ fontSize: "0.75rem" }}>
-                      <span>Step 4</span>
-                      <CheckCircle2 size={14} className="text-success" />
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                      <span className="font-bold uppercase tracking-wider text-emerald-400">Step 4</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition text-slate-500 group-hover:text-white" />
                     </div>
-                    <div className="fw-bold text-white mb-1">Approval & Process</div>
-                    <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                      Status: {activeBatch.status}
-                    </div>
+                    <h4 className="text-base font-bold text-white mb-1">Approval &amp; Ingestion</h4>
+                    <p className="text-xs text-slate-400">
+                      Status: <strong className="text-white uppercase">{activeBatch.status}</strong>
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-5 border border-dashed border-secondary border-opacity-30 rounded-3">
-              <UploadCloud size={48} className="text-secondary mb-3 opacity-50" />
-              <h5 className="text-white">No Active Import Batch</h5>
-              <p className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                Upload a CSV file to initiate the intelligent staging, mapping, and validation pipeline.
-              </p>
-              <button onClick={() => setActiveTab("upload")} className="btn btn-primary btn-sm px-4 py-2 rounded-3">
-                Upload CSV File
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 4. TAB 2: CSV UPLOAD ENGINE */}
-      {activeTab === "upload" && (
-        <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-4 border-bottom border-secondary border-opacity-25 mb-4">
-            <div>
-              <h4 className="h5 text-white fw-bold mb-1">Staging & Ingestion Gateway</h4>
-              <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                Strict CSV format enforcement. Every upload is verified for UTF-8 integrity, hashed with SHA-256, and stored securely in permanent retention.
-              </p>
-            </div>
-
-            <div className="d-flex align-items-center gap-2 bg-dark bg-opacity-75 border border-secondary border-opacity-30 rounded-3 px-3 py-2">
-              <Building2 size={16} className="text-primary" />
-              <div>
-                <div className="text-secondary" style={{ fontSize: "0.625rem" }}>DESTINATION CAMPUS</div>
-                <div className="text-white fw-bold" style={{ fontSize: "0.8125rem" }}>
-                  {currentCampus ? `${currentCampus.name} (${currentCampus.code})` : "None Selected"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Drag & Drop Zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleFileDrop}
-            className={`import-dropzone ${isDragOver ? "is-dragover" : ""}`}
-            onClick={() => document.getElementById("csv-file-picker")?.click()}
-          >
-            <input
-              id="csv-file-picker"
-              type="file"
-              accept=".csv"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileSelected(e.target.files[0]);
-                }
-              }}
-              style={{ display: "none" }}
-            />
-
-            <div className="dropzone-icon">
-              <FileSpreadsheet size={32} />
-            </div>
-
-            <h5 className="text-white fw-bold mb-2">
-              {selectedFile ? selectedFile.name : "Drag & Drop Member CSV File Here"}
-            </h5>
-            <p className="text-secondary mb-3" style={{ fontSize: "0.8125rem" }}>
-              {selectedFile
-                ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready to stage`
-                : "Or click anywhere in this area to browse from your device"}
-            </p>
-
-            <div className="d-inline-flex flex-wrap align-items-center justify-content-center gap-2">
-              <span className="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                UTF-8 Encoded
-              </span>
-              <span className="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                Comma Delimited
-              </span>
-              <span className="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                Multi-line Quotes
-              </span>
-              <span className="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                Amharic & English
-              </span>
-            </div>
-          </div>
-
-          {/* Action Bar */}
-          <div className="d-flex justify-content-between align-items-center pt-4">
-            <button
-              onClick={() => downloadCsvTemplate(token!)}
-              className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-2"
-            >
-              <Download size={15} />
-              <span>Download Official CSV Template</span>
-            </button>
-
-            <div className="d-flex align-items-center gap-2">
-              {selectedFile && (
+            ) : (
+              <div className="rounded-2xl bg-slate-900/90 border-2 border-dashed border-slate-800 p-12 text-center shadow-xl">
+                <UploadCloud className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">No Active Ingestion Batch Selected</h3>
+                <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+                  Select a previous batch from history or upload a new CSV file to trigger intelligent staging, deduplication, and registration.
+                </p>
                 <button
-                  onClick={() => setSelectedFile(null)}
-                  className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3"
+                  onClick={() => setActiveTab("upload")}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 inline-flex items-center gap-2"
                 >
-                  Clear Selection
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Upload Member CSV</span>
                 </button>
-              )}
-
-              <button
-                onClick={handleExecuteUpload}
-                disabled={!selectedFile || actionLoading}
-                className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold"
-              >
-                {actionLoading ? (
-                  <>
-                    <RefreshCw size={15} className="spinner-border spinner-border-sm" />
-                    <span>Verifying & Staging...</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud size={16} />
-                    <span>Stage CSV File</span>
-                  </>
-                )}
-              </button>
-            </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 5. TAB 3: COLUMN MAPPING & PREVIEW */}
-      {activeTab === "mapping" && (
-        <div className="d-flex flex-column gap-4">
-          <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25 mb-4">
+        {/* 5. TAB 2: CSV UPLOAD ENGINE */}
+        {activeTab === "upload" && (
+          <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
               <div>
-                <h4 className="h5 text-white fw-bold mb-1">Column Mapping Engine</h4>
-                <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                  Map source CSV headers to the 17 Module 3 member fields. Target fields marked with * are strictly required.
+                <h3 className="text-xl font-bold text-white tracking-tight">Staging &amp; Ingestion Gateway</h3>
+                <p className="text-sm text-slate-300 mt-1">
+                  Strict CSV format enforcement. Every upload is verified for UTF-8 integrity, hashed with SHA-256, and stored securely in permanent retention.
                 </p>
               </div>
 
-              <button
-                onClick={handleSaveMappings}
-                disabled={actionLoading}
-                className="btn btn-primary px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold"
-              >
-                {actionLoading ? (
-                  <>
-                    <RefreshCw size={15} className="spinner-border spinner-border-sm" />
-                    <span>Saving & Validating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check size={16} />
-                    <span>Confirm Mappings & Validate</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-3 bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800">
+                <Building2 className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400">Target Campus</div>
+                  <div className="text-sm font-bold text-white">
+                    {currentCampus ? `${currentCampus.name} (${currentCampus.code})` : "None Selected"}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Mapping Grid */}
-            <div className="row g-3">
-              {detectedHeaders.map((header) => {
-                const currentTarget = currentMappings[header] || "ignored";
-                return (
-                  <div key={header} className="col-12 col-md-6 col-lg-4">
-                    <div className="mapping-card">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-secondary" style={{ fontSize: "0.6875rem", textTransform: "uppercase" }}>
-                          Source CSV Header
+            {/* Dropzone */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleFileDrop}
+              onClick={() => document.getElementById("csv-file-input")?.click()}
+              className={`rounded-2xl border-2 border-dashed p-10 text-center transition duration-300 cursor-pointer shadow-inner ${
+                isDragOver
+                  ? "border-indigo-400 bg-indigo-950/20"
+                  : "border-slate-700 bg-slate-950/60 hover:border-indigo-500/70 hover:bg-slate-900/60"
+              }`}
+            >
+              <input
+                type="file"
+                id="csv-file-input"
+                accept=".csv"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileSelected(e.target.files[0]);
+                  }
+                }}
+                className="hidden"
+              />
+
+              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/10">
+                <FileSpreadsheet className="w-8 h-8" />
+              </div>
+
+              <h4 className="text-lg font-bold text-white mb-1">
+                {selectedFile ? selectedFile.name : "Drag & Drop Member CSV File Here"}
+              </h4>
+              <p className="text-sm text-slate-400 mb-4">
+                {selectedFile
+                  ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready for cryptographic staging`
+                  : "Or click anywhere in this dashed box to browse files from your computer"}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                  UTF-8 BOM Compatible
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                  Comma-Separated
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                  Escaped Quotes &quot;&quot;
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                  Amharic &amp; English
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/50 text-rose-300 border border-rose-800/40">
+                  .xlsx rejected with guidance
+                </span>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+              <button
+                onClick={() => downloadCsvTemplate(token!)}
+                className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-sm font-semibold shadow-md flex items-center gap-2 transition hover:border-slate-500"
+              >
+                <Download className="w-4 h-4 text-emerald-400" />
+                <span>Download Official CSV Template</span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                {selectedFile && (
+                  <button
+                    onClick={() => setSelectedFile(null)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 text-sm font-semibold transition"
+                  >
+                    Clear Selection
+                  </button>
+                )}
+
+                <button
+                  onClick={handleExecuteUpload}
+                  disabled={!selectedFile || actionLoading}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition disabled:opacity-50 active:scale-95"
+                >
+                  {actionLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>Verifying &amp; Staging...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-4 h-4" />
+                      <span>Stage CSV File</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. TAB 3: COLUMN MAPPING & PREVIEW */}
+        {activeTab === "mapping" && (
+          <div className="space-y-6">
+            <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800 mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Column Mapping Engine</h3>
+                  <p className="text-sm text-slate-300 mt-1">
+                    Map source CSV headers to the 17 Module 3 member fields. Target fields marked with * are strictly required for registration.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleSaveMappings}
+                  disabled={actionLoading}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition disabled:opacity-50 active:scale-95"
+                >
+                  {actionLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>Validating Rows...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Confirm Mappings &amp; Validate</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Mapping Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {detectedHeaders.map((header) => {
+                  const currentTarget = currentMappings[header] || "ignored";
+                  return (
+                    <div
+                      key={header}
+                      className="rounded-xl bg-slate-950/80 border border-slate-800 p-4 flex flex-col justify-between hover:border-slate-700 transition"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          Source CSV Column
                         </span>
                         {currentTarget !== "ignored" && (
-                          <span className="badge bg-success bg-opacity-20 text-success" style={{ fontSize: "0.625rem" }}>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                             Mapped
                           </span>
                         )}
                       </div>
 
-                      <div className="fw-bold text-white mb-2 text-truncate" title={header}>
+                      <div className="text-sm font-bold text-white mb-3 truncate" title={header}>
                         {header}
                       </div>
 
@@ -978,73 +1059,78 @@ export const ExcelImportPage: React.FC = () => {
                           const val = e.target.value;
                           setCurrentMappings((prev) => ({ ...prev, [header]: val }));
                         }}
-                        className="form-select form-select-sm bg-dark text-white border-secondary border-opacity-30 rounded-3"
-                        style={{ fontSize: "0.8125rem" }}
+                        className="bg-slate-900 text-white border border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-inner"
                       >
                         <option value="ignored">-- (Ignore this column) --</option>
                         {CANONICAL_FIELDS.map((cf) => (
-                          <option key={cf.key} value={cf.key}>
+                          <option key={cf.key} value={cf.key} className="bg-slate-900 text-white">
                             {cf.required ? "* " : ""}{cf.labelEn} ({cf.labelAm})
                           </option>
                         ))}
                       </select>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sample Rows Preview Table */}
-          {sampleRows.length > 0 && (
-            <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-              <h5 className="text-white fw-bold mb-3">Sample Rows Preview (First 5 Rows)</h5>
-              <div className="table-responsive">
-                <table className="table table-dark table-hover mb-0" style={{ fontSize: "0.8125rem" }}>
-                  <thead>
-                    <tr>
-                      <th className="text-secondary">#</th>
-                      {detectedHeaders.map((h) => (
-                        <th key={h} className="text-info">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sampleRows.map((row, idx) => (
-                      <tr key={idx}>
-                        <td className="text-secondary">{idx + 1}</td>
-                        {detectedHeaders.map((h) => (
-                          <td key={h} className="text-white">{row[h] || "-"}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  );
+                })}
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* 6. TAB 4: VALIDATION DIAGNOSTIC */}
-      {activeTab === "validation" && (
-        <div className="d-flex flex-column gap-4">
-          <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25 mb-4">
+            {/* Sample Rows Preview Table */}
+            {sampleRows.length > 0 && (
+              <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-base font-bold text-white">Sample Rows Preview (First 5 Rows)</h4>
+                  <span className="text-xs text-slate-400">Total detected: {detectedHeaders.length} headers</span>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-slate-800">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
+                      <tr>
+                        <th className="p-3 border-b border-slate-800">#</th>
+                        {detectedHeaders.map((h) => (
+                          <th key={h} className="p-3 border-b border-slate-800 text-cyan-400 whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
+                      {sampleRows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/30 transition">
+                          <td className="p-3 text-slate-500 font-mono">{idx + 1}</td>
+                          {detectedHeaders.map((h) => (
+                            <td key={h} className="p-3 text-slate-200 whitespace-nowrap">
+                              {row[h] || "-"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 7. TAB 4: VALIDATION DIAGNOSTIC */}
+        {activeTab === "validation" && (
+          <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
               <div>
-                <h4 className="h5 text-white fw-bold mb-1">Data Quality & Validation Diagnostic</h4>
-                <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                  Detailed breakdown of schema violations, missing required values, invalid phone digits, and out-of-range ages.
+                <h3 className="text-xl font-bold text-white tracking-tight">Row Validation &amp; Error Diagnostic</h3>
+                <p className="text-sm text-slate-300 mt-1">
+                  Detailed inspection of schema constraints, missing mandatory fields, invalid phone formats, and out-of-bounds age values.
                 </p>
               </div>
 
-              <div className="d-flex gap-2">
+              <div className="flex items-center gap-3">
                 {activeBatch && (
                   <button
                     onClick={() => downloadImportErrorReport(activeBatch.id, token!)}
-                    className="btn btn-outline-danger btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-2"
+                    className="px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-800 text-sm font-semibold shadow-md flex items-center gap-2 transition"
                   >
-                    <Download size={14} />
+                    <Download className="w-4 h-4 text-rose-400" />
                     <span>Download Error Report (.xlsx)</span>
                   </button>
                 )}
@@ -1053,33 +1139,43 @@ export const ExcelImportPage: React.FC = () => {
                   onClick={() => {
                     if (activeBatch) loadBatchDeepDetails(activeBatch.id);
                   }}
-                  className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3"
+                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 transition"
+                  title="Reload Validation Results"
                 >
-                  <RefreshCw size={14} />
+                  <RefreshCw className="w-4 h-4 text-slate-300" />
                 </button>
               </div>
             </div>
 
-            {/* Severity Filter */}
-            <div className="d-flex gap-2 mb-3">
+            {/* Severity Filter Controls */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setErrorFilterSeverity("ALL")}
-                className={`btn btn-sm rounded-pill px-3 ${errorFilterSeverity === "ALL" ? "btn-primary" : "btn-outline-secondary"}`}
-                style={{ fontSize: "0.75rem" }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
+                  errorFilterSeverity === "ALL"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                }`}
               >
                 All Issues ({validationErrors.length})
               </button>
               <button
                 onClick={() => setErrorFilterSeverity("ERROR")}
-                className={`btn btn-sm rounded-pill px-3 ${errorFilterSeverity === "ERROR" ? "btn-danger" : "btn-outline-secondary"}`}
-                style={{ fontSize: "0.75rem" }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
+                  errorFilterSeverity === "ERROR"
+                    ? "bg-rose-600 text-white"
+                    : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                }`}
               >
                 Errors ({validationErrors.filter((e) => e.severity === "error").length})
               </button>
               <button
                 onClick={() => setErrorFilterSeverity("WARNING")}
-                className={`btn btn-sm rounded-pill px-3 ${errorFilterSeverity === "WARNING" ? "btn-warning" : "btn-outline-secondary"}`}
-                style={{ fontSize: "0.75rem" }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
+                  errorFilterSeverity === "WARNING"
+                    ? "bg-amber-600 text-white"
+                    : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                }`}
               >
                 Warnings ({validationErrors.filter((e) => e.severity === "warning").length})
               </button>
@@ -1087,30 +1183,39 @@ export const ExcelImportPage: React.FC = () => {
 
             {/* Errors Table */}
             {filteredErrors.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-dark table-hover mb-0" style={{ fontSize: "0.8125rem" }}>
-                  <thead>
+              <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
                     <tr>
-                      <th className="text-secondary">Row #</th>
-                      <th className="text-secondary">Field</th>
-                      <th className="text-secondary">Error Code</th>
-                      <th className="text-secondary">Diagnostic Message</th>
-                      <th className="text-secondary">Severity</th>
+                      <th className="p-3.5 border-b border-slate-800">Row #</th>
+                      <th className="p-3.5 border-b border-slate-800">Target Field</th>
+                      <th className="p-3.5 border-b border-slate-800">Error Code</th>
+                      <th className="p-3.5 border-b border-slate-800">Diagnostic Message</th>
+                      <th className="p-3.5 border-b border-slate-800 text-center">Severity</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
                     {filteredErrors.map((err) => (
-                      <tr key={err.id}>
-                        <td className="text-white fw-bold">Row {err.rowNumber}</td>
-                        <td className="text-info font-monospace">{err.fieldName}</td>
-                        <td className="text-secondary font-monospace" style={{ fontSize: "0.75rem" }}>
+                      <tr key={err.id} className="hover:bg-slate-800/30 transition">
+                        <td className="p-3.5 text-white font-bold whitespace-nowrap">
+                          Row {err.rowNumber}
+                        </td>
+                        <td className="p-3.5 text-cyan-400 font-mono font-semibold whitespace-nowrap">
+                          {err.fieldName}
+                        </td>
+                        <td className="p-3.5 text-slate-400 font-mono text-[11px] whitespace-nowrap">
                           {err.errorCode}
                         </td>
-                        <td className="text-white">{err.errorMessage}</td>
-                        <td>
+                        <td className="p-3.5 text-slate-200">
+                          {err.errorMessage}
+                        </td>
+                        <td className="p-3.5 text-center whitespace-nowrap">
                           <span
-                            className={`badge ${err.severity === "error" ? "bg-danger" : "bg-warning text-dark"} text-uppercase px-2 py-1`}
-                            style={{ fontSize: "0.625rem" }}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                              err.severity === "error"
+                                ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            }`}
                           >
                             {err.severity}
                           </span>
@@ -1121,146 +1226,153 @@ export const ExcelImportPage: React.FC = () => {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-5">
-                <CheckCircle2 size={48} className="text-success mb-3 opacity-75" />
-                <h5 className="text-white">Zero Validation Errors Found</h5>
-                <p className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                  All staged records meet C-CIMAS schema constraints and integrity rules.
+              <div className="text-center py-12 rounded-xl bg-slate-950/50 border border-slate-800">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                <h4 className="text-lg font-bold text-white mb-1">Zero Schema Validation Errors</h4>
+                <p className="text-xs text-slate-400">
+                  All staged records meet C-CIMAS database constraints and validation criteria.
                 </p>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 7. TAB 5: DUPLICATE REVIEW CENTER */}
-      {activeTab === "duplicates" && (
-        <div className="d-flex flex-column gap-4">
-          <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25 mb-4">
+        {/* 8. TAB 5: DUPLICATE REVIEW CENTER */}
+        {activeTab === "duplicates" && (
+          <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
               <div>
-                <h4 className="h5 text-white fw-bold mb-1">Administrator Duplicate Review Center</h4>
-                <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                  Side-by-side comparison between staged rows and existing registered members. Strict blocking ensures no batch can be approved until all duplicate decisions are resolved.
+                <h3 className="text-xl font-bold text-white tracking-tight">Administrator Duplicate Review Center</h3>
+                <p className="text-sm text-slate-300 mt-1">
+                  Side-by-side comparison between incoming staged rows and existing registered members. Strict blocking ensures no batch can be approved until all duplicate decisions are resolved.
                 </p>
               </div>
 
-              <div className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                Pending Reviews: <strong className="text-warning">{duplicateCandidates.filter((c) => c.reviewStatus === "pending").length}</strong>
+              <div className="text-sm text-slate-300">
+                Pending Decisions: <strong className="text-amber-400 text-base">{duplicateCandidates.filter((c) => c.reviewStatus === "pending").length}</strong>
               </div>
             </div>
 
             {duplicateCandidates.length > 0 ? (
-              <div className="d-flex flex-column gap-4">
+              <div className="space-y-6">
                 {duplicateCandidates.map((candidate) => {
                   const isPending = candidate.reviewStatus === "pending";
                   return (
-                    <div key={candidate.id} className="duplicate-review-card">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div className="d-flex align-items-center gap-2">
-                          <span className="badge bg-warning text-dark fw-bold px-2 py-1" style={{ fontSize: "0.6875rem" }}>
-                            Row #{candidate.rowNumber} Duplicate Alert
+                    <div
+                      key={candidate.id}
+                      className="rounded-2xl bg-slate-950/90 border border-amber-500/40 p-6 shadow-xl space-y-5"
+                    >
+                      {/* Top Candidate Bar */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-3">
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Incoming Row #{candidate.rowNumber} Duplicate Conflict
                           </span>
-                          <span className="match-score-pill bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30">
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
                             Match Score: {candidate.matchScore}%
                           </span>
                         </div>
 
                         <span
-                          className={`badge ${isPending ? "bg-warning text-dark" : "bg-success"} text-uppercase px-2 py-1`}
-                          style={{ fontSize: "0.6875rem" }}
+                          className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
+                            isPending
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                          }`}
                         >
                           Status: {candidate.reviewStatus.replace(/_/g, " ")}
                         </span>
                       </div>
 
-                      <div className="text-secondary mb-3" style={{ fontSize: "0.8125rem" }}>
-                        Reason: <strong className="text-white">{candidate.matchReason}</strong> · Matched Attributes: <code className="text-info">{candidate.matchingFields.join(", ")}</code>
+                      <div className="text-xs text-slate-300">
+                        Reason: <strong className="text-white">{candidate.matchReason}</strong> &bull; Matched Fields: <code className="text-cyan-400 text-xs">{candidate.matchingFields.join(", ")}</code>
                       </div>
 
-                      {/* Side-by-Side Comparison */}
-                      <div className="comparison-grid mb-4">
-                        {/* Staged Record Side */}
-                        <div className="compare-side staged">
-                          <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary border-opacity-25">
-                            <span className="text-primary fw-bold" style={{ fontSize: "0.75rem", textTransform: "uppercase" }}>
-                              Staged CSV Record
+                      {/* Side-by-Side Comparison Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Staged Row Side */}
+                        <div className="rounded-xl bg-slate-900/90 border border-indigo-500/30 p-5 space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                            <span className="text-xs font-bold uppercase text-indigo-400">
+                              Incoming Staged Record
                             </span>
-                            <span className="text-secondary" style={{ fontSize: "0.6875rem" }}>
-                              Incoming Row #{candidate.rowNumber}
-                            </span>
+                            <span className="text-xs text-slate-500 font-mono">Row #{candidate.rowNumber}</span>
                           </div>
 
-                          <div className="d-flex flex-column gap-1.5" style={{ fontSize: "0.8125rem" }}>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Full Name:</span>
-                              <span className="text-white fw-bold">{candidate.stagedRow?.fullName || "N/A"}</span>
+                          <div className="space-y-1.5 text-xs">
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Full Name:</span>
+                              <span className="text-white font-bold">{candidate.stagedRow?.fullName || "N/A"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Baptismal Name:</span>
-                              <span className="text-white">{candidate.stagedRow?.christianName || "-"}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Baptismal Name:</span>
+                              <span className="text-slate-200">{candidate.stagedRow?.christianName || "-"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Gender:</span>
-                              <span className="text-white">{candidate.stagedRow?.gender || "-"}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Gender:</span>
+                              <span className="text-slate-200">{candidate.stagedRow?.gender || "-"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Phone Number:</span>
-                              <span className="text-white fw-bold">{candidate.stagedRow?.phoneNumber || "-"}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Phone Number:</span>
+                              <span className="text-white font-bold">{candidate.stagedRow?.phoneNumber || "-"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Department:</span>
-                              <span className="text-white">{candidate.stagedRow?.academicDepartment || "-"}</span>
+                            <div className="flex justify-between py-1">
+                              <span className="text-slate-400">Department:</span>
+                              <span className="text-slate-200">{candidate.stagedRow?.academicDepartment || "-"}</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Existing Member Side */}
-                        <div className="compare-side existing">
-                          <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary border-opacity-25">
-                            <span className="text-success fw-bold" style={{ fontSize: "0.75rem", textTransform: "uppercase" }}>
-                              Existing Registered Member
+                        <div className="rounded-xl bg-slate-900/90 border border-emerald-500/30 p-5 space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                            <span className="text-xs font-bold uppercase text-emerald-400">
+                              Existing System Member
                             </span>
-                            <span className="text-success font-monospace" style={{ fontSize: "0.6875rem" }}>
+                            <span className="text-xs text-emerald-400 font-mono font-bold">
                               {candidate.existingMember.memberId}
                             </span>
                           </div>
 
-                          <div className="d-flex flex-column gap-1.5" style={{ fontSize: "0.8125rem" }}>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Full Name:</span>
-                              <span className="text-white fw-bold">{candidate.existingMember.fullName}</span>
+                          <div className="space-y-1.5 text-xs">
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Full Name:</span>
+                              <span className="text-white font-bold">{candidate.existingMember.fullName}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Baptismal Name:</span>
-                              <span className="text-white">{candidate.existingMember.christianName || "-"}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Baptismal Name:</span>
+                              <span className="text-slate-200">{candidate.existingMember.christianName || "-"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Gender:</span>
-                              <span className="text-white">{candidate.existingMember.gender}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Gender:</span>
+                              <span className="text-slate-200">{candidate.existingMember.gender}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Phone Number:</span>
-                              <span className="text-white fw-bold">{candidate.existingMember.phoneNumber || "-"}</span>
+                            <div className="flex justify-between py-1 border-b border-slate-800/40">
+                              <span className="text-slate-400">Phone Number:</span>
+                              <span className="text-white font-bold">{candidate.existingMember.phoneNumber || "-"}</span>
                             </div>
-                            <div className="d-flex justify-content-between">
-                              <span className="text-secondary">Academic Dept:</span>
-                              <span className="text-white">{candidate.existingMember.academicDepartment || "-"}</span>
+                            <div className="flex justify-between py-1">
+                              <span className="text-slate-400">Academic Dept:</span>
+                              <span className="text-slate-200">{candidate.existingMember.academicDepartment || "-"}</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Review Action Controls */}
+                      {/* Decision Controls */}
                       {isPending ? (
-                        <div className="d-flex flex-column gap-2 pt-2 border-top border-secondary border-opacity-25">
-                          <div className="d-flex flex-wrap gap-2">
+                        <div className="pt-3 border-t border-slate-800 space-y-3">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => {
                                 setSelectedCandidate(candidate);
                                 setReviewDecision("create_new_member");
                               }}
-                              className={`btn btn-sm rounded-3 ${selectedCandidate?.id === candidate.id && reviewDecision === "create_new_member" ? "btn-primary" : "btn-outline-primary"}`}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                                selectedCandidate?.id === candidate.id && reviewDecision === "create_new_member"
+                                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                                  : "bg-slate-900 text-slate-300 hover:text-white border border-slate-700"
+                              }`}
                             >
                               Create As New Member
                             </button>
@@ -1270,7 +1382,11 @@ export const ExcelImportPage: React.FC = () => {
                                 setSelectedCandidate(candidate);
                                 setReviewDecision("update_existing_member");
                               }}
-                              className={`btn btn-sm rounded-3 ${selectedCandidate?.id === candidate.id && reviewDecision === "update_existing_member" ? "btn-success" : "btn-outline-success"}`}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                                selectedCandidate?.id === candidate.id && reviewDecision === "update_existing_member"
+                                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                                  : "bg-slate-900 text-slate-300 hover:text-white border border-slate-700"
+                              }`}
                             >
                               Update Existing Member
                             </button>
@@ -1280,7 +1396,11 @@ export const ExcelImportPage: React.FC = () => {
                                 setSelectedCandidate(candidate);
                                 setReviewDecision("skip_existing");
                               }}
-                              className={`btn btn-sm rounded-3 ${selectedCandidate?.id === candidate.id && reviewDecision === "skip_existing" ? "btn-secondary" : "btn-outline-secondary"}`}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                                selectedCandidate?.id === candidate.id && reviewDecision === "skip_existing"
+                                  ? "bg-slate-700 text-white shadow-md"
+                                  : "bg-slate-900 text-slate-300 hover:text-white border border-slate-700"
+                              }`}
                             >
                               Skip (Do Not Re-import)
                             </button>
@@ -1290,34 +1410,38 @@ export const ExcelImportPage: React.FC = () => {
                                 setSelectedCandidate(candidate);
                                 setReviewDecision("reject_row");
                               }}
-                              className={`btn btn-sm rounded-3 ${selectedCandidate?.id === candidate.id && reviewDecision === "reject_row" ? "btn-danger" : "btn-outline-danger"}`}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                                selectedCandidate?.id === candidate.id && reviewDecision === "reject_row"
+                                  ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
+                                  : "bg-slate-900 text-slate-300 hover:text-white border border-slate-700"
+                              }`}
                             >
                               Reject Staged Row
                             </button>
                           </div>
 
                           {selectedCandidate?.id === candidate.id && (
-                            <div className="d-flex gap-2 mt-2">
+                            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 animate-scale-in">
                               <input
                                 type="text"
                                 placeholder="Enter administrator justification reason for this decision..."
                                 value={reviewReason}
                                 onChange={(e) => setReviewReason(e.target.value)}
-                                className="form-control form-control-sm bg-dark text-white border-secondary border-opacity-30 rounded-3"
+                                className="w-full bg-slate-900 text-white border border-slate-700 rounded-xl px-4 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 shadow-inner"
                               />
                               <button
                                 onClick={handleSubmitReviewDecision}
                                 disabled={actionLoading}
-                                className="btn btn-warning btn-sm text-dark fw-bold px-3 shrink-0 rounded-3"
+                                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/20 whitespace-nowrap transition active:scale-95"
                               >
-                                {actionLoading ? "Submitting..." : "Apply Decision"}
+                                {actionLoading ? "Applying..." : "Confirm Decision"}
                               </button>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                          Decision recorded by <strong className="text-white">{candidate.reviewedBy || "Administrator"}</strong> · Reason: <em>"{candidate.decisionReason || "Resolved"}"</em>
+                        <div className="pt-2 border-t border-slate-800 text-xs text-slate-400">
+                          Reviewed by <strong className="text-white">{candidate.reviewedBy || "Administrator"}</strong> &bull; Reason: <em>&quot;{candidate.decisionReason || "Resolved"}&quot;</em>
                         </div>
                       )}
                     </div>
@@ -1325,281 +1449,284 @@ export const ExcelImportPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-5">
-                <CheckCircle2 size={48} className="text-success mb-3 opacity-75" />
-                <h5 className="text-white">No Duplicate Conflicts</h5>
-                <p className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                  All rows are verified unique against both intra-batch entries and existing registered members.
+              <div className="text-center py-12 rounded-xl bg-slate-950/50 border border-slate-800">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                <h4 className="text-lg font-bold text-white mb-1">Zero Duplicate Conflicts</h4>
+                <p className="text-xs text-slate-400">
+                  All staged records are verified unique against existing members and intra-batch rows.
                 </p>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 8. TAB 6: APPROVAL & PROCESSING PIPELINE */}
-      {activeTab === "approval" && activeBatch && (
-        <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25 mb-4">
-            <div>
-              <h4 className="h5 text-white fw-bold mb-1">Batch Approval & Member Execution</h4>
-              <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                Strict workflow enforcement: Approval is blocked until all duplicate candidates have an explicit administrator decision. Once approved, members are created idempotently via Module 3.
-              </p>
-            </div>
+        {/* 9. TAB 6: APPROVAL & PROCESSING PIPELINE */}
+        {activeTab === "approval" && activeBatch && (
+          <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Batch Approval &amp; Member Ingestion</h3>
+                <p className="text-sm text-slate-300 mt-1">
+                  Strict gate enforcement: Approval is blocked until all duplicate candidates have an explicit administrator decision. Once approved, members are created idempotently via Module 3.
+                </p>
+              </div>
 
-            <div className="d-flex align-items-center gap-2">
-              <span className="badge bg-primary text-uppercase px-3 py-2 rounded-3" style={{ fontSize: "0.8125rem" }}>
+              <span className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                 Batch Status: {activeBatch.status}
               </span>
             </div>
-          </div>
 
-          {/* Pre-Approval Checklist */}
-          <div className="p-3.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 mb-4">
-            <h6 className="text-white fw-bold mb-3">Pre-Approval Gate Checklist</h6>
-            <div className="d-flex flex-column gap-2" style={{ fontSize: "0.8125rem" }}>
-              <div className="d-flex align-items-center gap-2">
-                <CheckCircle2 size={16} className="text-success" />
-                <span className="text-white">Active Campus Verification: Validated into <strong>{activeBatch.campusName}</strong></span>
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <CheckCircle2 size={16} className="text-success" />
-                <span className="text-white">Column Mapping: Required <code>full_name</code> and fields mapped</span>
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                {duplicateCandidates.filter((c) => c.reviewStatus === "pending").length === 0 ? (
-                  <>
-                    <CheckCircle2 size={16} className="text-success" />
-                    <span className="text-white">Duplicate Resolution: All candidates reviewed (0 pending)</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle size={16} className="text-danger" />
-                    <span className="text-danger fw-bold">
-                      Duplicate Resolution: {duplicateCandidates.filter((c) => c.reviewStatus === "pending").length} candidates require decision before approval
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Action Trigger Buttons */}
-          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2">
-            <div>
-              {activeBatch.status === "approved" && (
-                <div className="text-success fw-bold" style={{ fontSize: "0.875rem" }}>
-                  <CheckCircle2 size={16} className="me-1 inline" />
-                  Approved by {activeBatch.reviewedByName || "Admin"}. Ready for final processing.
+            {/* Pre-Approval Checklist Box */}
+            <div className="rounded-xl bg-slate-950 border border-slate-800 p-5 space-y-3">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Pre-Approval Gate Checklist</h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="text-slate-200">
+                    Active Campus Match: Validated into <strong>{activeBatch.campusName}</strong>
+                  </span>
                 </div>
-              )}
-            </div>
-
-            <div className="d-flex gap-2">
-              {activeBatch.status !== "approved" && activeBatch.status !== "completed" && (
-                <button
-                  onClick={() => setShowApprovalModal(true)}
-                  disabled={duplicateCandidates.filter((c) => c.reviewStatus === "pending").length > 0 || actionLoading}
-                  className="btn btn-primary px-4 py-2.5 rounded-3 d-flex align-items-center gap-2 fw-bold"
-                >
-                  <CheckCircle2 size={16} />
-                  <span>Approve Import Batch</span>
-                </button>
-              )}
-
-              {activeBatch.status === "approved" && (
-                <button
-                  onClick={handleProcessBatch}
-                  disabled={isProcessingLive}
-                  className="btn btn-success px-4 py-2.5 rounded-3 d-flex align-items-center gap-2 fw-bold"
-                >
-                  {isProcessingLive ? (
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="text-slate-200">
+                    Column Mapping: Mandatory <code>full_name</code> and <code>gender</code> mapped
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  {duplicateCandidates.filter((c) => c.reviewStatus === "pending").length === 0 ? (
                     <>
-                      <RefreshCw size={16} className="spinner-border spinner-border-sm" />
-                      <span>Ingesting Members ({processingProgress}%)...</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      <span className="text-slate-200">Duplicate Resolution: All candidates resolved (0 pending)</span>
                     </>
                   ) : (
                     <>
-                      <Database size={16} />
-                      <span>Execute Member Creation</span>
+                      <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                      <span className="text-rose-400 font-bold">
+                        Duplicate Resolution: {duplicateCandidates.filter((c) => c.reviewStatus === "pending").length} candidates require decision before approval
+                      </span>
                     </>
                   )}
-                </button>
-              )}
-
-              {activeBatch.failedRows > 0 && (
-                <button
-                  onClick={handleRetryFailed}
-                  disabled={actionLoading}
-                  className="btn btn-outline-warning px-3 py-2 rounded-3"
-                >
-                  Retry Failed Rows
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Live Ingestion Progress Bar */}
-          {isProcessingLive && (
-            <div className="mt-4 pt-4 border-top border-secondary border-opacity-25">
-              <div className="d-flex justify-content-between text-secondary mb-2" style={{ fontSize: "0.75rem" }}>
-                <span>Processing Staged Records via Module 3 Member Service</span>
-                <span className="text-white fw-bold">{processingProgress}%</span>
-              </div>
-              <div className="progress bg-dark" style={{ height: "8px" }}>
-                <div
-                  className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-                  style={{ width: `${processingProgress}%` }}
-                />
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* 9. TAB 7: HISTORY & AUDIT LEDGER */}
-      {activeTab === "history" && (
-        <div className="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 p-4">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom border-secondary border-opacity-25 mb-4">
-            <div>
-              <h4 className="h5 text-white fw-bold mb-1">Batch Import History & Audit Ledger</h4>
-              <p className="text-secondary mb-0" style={{ fontSize: "0.8125rem" }}>
-                Full provenance of all import batches, cryptographic checksums, author identity, and original raw files.
-              </p>
-            </div>
-
-            <button
-              onClick={loadBatches}
-              className="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 d-flex align-items-center gap-2"
-            >
-              <RefreshCw size={14} />
-              <span>Refresh Ledger</span>
-            </button>
-          </div>
-
-          <div className="table-responsive">
-            <table className="table table-dark table-hover mb-0" style={{ fontSize: "0.8125rem" }}>
-              <thead>
-                <tr>
-                  <th className="text-secondary">Batch ID</th>
-                  <th className="text-secondary">File Name</th>
-                  <th className="text-secondary">Campus</th>
-                  <th className="text-secondary text-center">Total</th>
-                  <th className="text-secondary text-center">Imported</th>
-                  <th className="text-secondary text-center">Duplicates</th>
-                  <th className="text-secondary">Status</th>
-                  <th className="text-secondary">Date</th>
-                  <th className="text-secondary text-end">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((batch) => (
-                  <tr key={batch.id}>
-                    <td className="font-monospace text-secondary" style={{ fontSize: "0.75rem" }}>
-                      {batch.id.substring(0, 8)}...
-                    </td>
-                    <td className="text-white fw-bold">{batch.fileName}</td>
-                    <td className="text-secondary">{batch.campusName}</td>
-                    <td className="text-center text-white">{batch.totalRows}</td>
-                    <td className="text-center text-success fw-bold">{batch.importedRows}</td>
-                    <td className="text-center text-warning">{batch.duplicateRows}</td>
-                    <td>
-                      <span className="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30 text-uppercase px-2 py-1" style={{ fontSize: "0.625rem" }}>
-                        {batch.status.replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td className="text-secondary" style={{ fontSize: "0.75rem" }}>
-                      {new Date(batch.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="text-end">
-                      <div className="d-flex justify-content-end gap-1.5">
-                        <button
-                          onClick={() => {
-                            setActiveBatch(batch);
-                            setActiveTab("mapping");
-                          }}
-                          className="btn btn-outline-primary btn-sm px-2 py-1 rounded-2"
-                          title="Open Batch Workspace"
-                        >
-                          <Eye size={13} />
-                        </button>
-
-                        <button
-                          onClick={() => downloadOriginalCsvFile(batch.id, batch.fileName, token!)}
-                          className="btn btn-outline-secondary btn-sm px-2 py-1 rounded-2"
-                          title="Download Original Stored CSV"
-                        >
-                          <Download size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* APPROVAL CONFIRMATION MODAL */}
-      {showApprovalModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content bg-dark border border-secondary border-opacity-30 text-white rounded-3">
-              <div className="modal-header border-bottom border-secondary border-opacity-25">
-                <h5 className="modal-title fw-bold text-white d-flex align-items-center gap-2">
-                  <CheckCircle2 size={18} className="text-primary" />
-                  <span>Authorize Batch Approval</span>
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowApprovalModal(false)}
-                />
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+              <div>
+                {activeBatch.status === "approved" && (
+                  <div className="text-emerald-400 text-sm font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approved by {activeBatch.reviewedByName || "Administrator"}. Ready for member ingestion.</span>
+                  </div>
+                )}
               </div>
 
-              <div className="modal-body">
-                <p className="text-secondary" style={{ fontSize: "0.8125rem" }}>
-                  Confirming approval will unlock member ingestion. You are authorizing registration of validated members into campus: <strong className="text-white">{activeBatch?.campusName}</strong>.
-                </p>
+              <div className="flex items-center gap-3">
+                {activeBatch.status !== "approved" && activeBatch.status !== "completed" && (
+                  <button
+                    onClick={() => setShowApprovalModal(true)}
+                    disabled={duplicateCandidates.filter((c) => c.reviewStatus === "pending").length > 0 || actionLoading}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition disabled:opacity-40 active:scale-95"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approve Import Batch</span>
+                  </button>
+                )}
 
-                <div className="mb-3">
-                  <label className="form-label text-secondary" style={{ fontSize: "0.75rem", textTransform: "uppercase" }}>
-                    Administrator Approval Notes
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Enter approval authorization notes or cohort reference..."
-                    value={approvalNotes}
-                    onChange={(e) => setApprovalNotes(e.target.value)}
-                    className="form-control bg-dark text-white border-secondary border-opacity-30 rounded-3"
-                    style={{ fontSize: "0.8125rem" }}
+                {activeBatch.status === "approved" && (
+                  <button
+                    onClick={handleProcessBatch}
+                    disabled={isProcessingLive}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition disabled:opacity-50 active:scale-95"
+                  >
+                    {isProcessingLive ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                        <span>Creating Members ({processingProgress}%)...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-4 h-4" />
+                        <span>Execute Member Creation</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {activeBatch.failedRows > 0 && (
+                  <button
+                    onClick={handleRetryFailed}
+                    disabled={actionLoading}
+                    className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 border border-amber-500/40 text-sm font-semibold transition"
+                  >
+                    Retry Failed Rows
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Live Ingestion Progress Bar */}
+            {isProcessingLive && (
+              <div className="pt-4 border-t border-slate-800 space-y-2 animate-scale-in">
+                <div className="flex justify-between text-xs text-slate-300">
+                  <span>Executing Member Ingestion via Module 3 Member Service</span>
+                  <span className="font-bold text-white">{processingProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${processingProgress}%` }}
                   />
                 </div>
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="modal-footer border-top border-secondary border-opacity-25">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm rounded-3"
-                  onClick={() => setShowApprovalModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleApproveBatch}
-                  disabled={actionLoading}
-                  className="btn btn-primary btn-sm rounded-3 px-3 fw-bold"
-                >
-                  {actionLoading ? "Authorizing..." : "Confirm & Authorize"}
-                </button>
+        {/* 10. TAB 7: HISTORY & AUDIT LEDGER */}
+        {activeTab === "history" && (
+          <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Batch Import History &amp; Audit Ledger</h3>
+                <p className="text-sm text-slate-300 mt-1">
+                  Full provenance of all import batches, cryptographic checksums, author identity, and original raw files.
+                </p>
               </div>
+
+              <button
+                onClick={loadBatches}
+                className="px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 text-xs font-semibold shadow-md flex items-center gap-2 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-slate-300" />
+                <span>Refresh Ledger</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-md">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
+                  <tr>
+                    <th className="p-3.5 border-b border-slate-800">Batch ID</th>
+                    <th className="p-3.5 border-b border-slate-800">File Name</th>
+                    <th className="p-3.5 border-b border-slate-800">Campus</th>
+                    <th className="p-3.5 border-b border-slate-800 text-center">Total</th>
+                    <th className="p-3.5 border-b border-slate-800 text-center">Imported</th>
+                    <th className="p-3.5 border-b border-slate-800 text-center">Duplicates</th>
+                    <th className="p-3.5 border-b border-slate-800">Status</th>
+                    <th className="p-3.5 border-b border-slate-800">Date</th>
+                    <th className="p-3.5 border-b border-slate-800 text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
+                  {history.map((batch) => (
+                    <tr key={batch.id} className="hover:bg-slate-800/30 transition">
+                      <td className="p-3.5 font-mono text-slate-500 whitespace-nowrap">
+                        {batch.id.substring(0, 10)}...
+                      </td>
+                      <td className="p-3.5 text-white font-bold whitespace-nowrap">
+                        {batch.fileName}
+                      </td>
+                      <td className="p-3.5 text-slate-300 whitespace-nowrap">
+                        {batch.campusName}
+                      </td>
+                      <td className="p-3.5 text-center text-white font-bold whitespace-nowrap">
+                        {batch.totalRows}
+                      </td>
+                      <td className="p-3.5 text-center text-emerald-400 font-bold whitespace-nowrap">
+                        {batch.importedRows}
+                      </td>
+                      <td className="p-3.5 text-center text-amber-400 font-bold whitespace-nowrap">
+                        {batch.duplicateRows}
+                      </td>
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          {batch.status.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-slate-400 whitespace-nowrap">
+                        {new Date(batch.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-3.5 text-end whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setActiveBatch(batch);
+                              setActiveTab("mapping");
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-indigo-400 border border-slate-800 transition"
+                            title="Open Batch Workspace"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => downloadOriginalCsvFile(batch.id, batch.fileName, token!)}
+                            className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-400 border border-slate-800 transition"
+                            title="Download Original Retained CSV"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* APPROVAL CONFIRMATION MODAL */}
+      {showApprovalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="rounded-2xl bg-slate-900 border border-slate-800 w-full max-w-lg p-6 shadow-2xl space-y-5 animate-scale-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5 text-white font-bold text-base">
+                <CheckCircle2 className="w-5 h-5 text-indigo-400" />
+                <span>Authorize Batch Approval</span>
+              </div>
+              <button onClick={() => setShowApprovalModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Confirming approval unlocks member registration. You are authorizing registration of validated members into campus: <strong className="text-white">{activeBatch?.campusName}</strong>.
+              </p>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Administrator Approval Authorization Notes
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Enter approval justification, cohort details, or reference remarks..."
+                  value={approvalNotes}
+                  onChange={(e) => setApprovalNotes(e.target.value)}
+                  className="w-full bg-slate-950 text-white border border-slate-700 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 shadow-inner"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowApprovalModal(false)}
+                className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApproveBatch}
+                disabled={actionLoading}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2"
+              >
+                {actionLoading ? "Authorizing..." : "Confirm & Authorize"}
+              </button>
             </div>
           </div>
         </div>
