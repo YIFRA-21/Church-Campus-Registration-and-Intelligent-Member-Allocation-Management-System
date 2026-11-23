@@ -261,6 +261,17 @@ export const MembersPage: React.FC = () => {
     loadMembers();
   }, [loadMembers]);
 
+  // Close Detail Modal on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedMember) setSelectedMember(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedMember]);
+
   // Handle Create Member
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2203,141 +2214,210 @@ export const MembersPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          11. 360-DEGREE MEMBER DETAIL DRAWER
+          11. 360-DEGREE MEMBER DETAIL MODAL (FIXED IN FRONT OF TABLE)
          ========================================================================= */}
       {selectedMember && (
-        <div className="cimas-drawer-overlay">
-          <div className="drawer-panel">
-            {/* Drawer Header */}
-            <div className="modal-header">
-              <div>
-                <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-500/30 border border-indigo-400/30 rounded text-indigo-200">
-                  {selectedMember.memberId}
-                </span>
-                <h3 className="text-xl font-bold mt-1 text-white">{selectedMember.fullName}</h3>
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in"
+          onClick={() => setSelectedMember(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh] animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950/50 to-slate-900 border-b border-slate-800 p-5 sm:p-6 flex items-start justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-indigo-500/20 border border-indigo-400/40 rounded-md text-indigo-300">
+                    {selectedMember.memberId}
+                  </span>
+                  {getStatusBadge(selectedMember.status)}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {selectedMember.fullName}
+                </h3>
                 {selectedMember.christianName && (
-                  <p className="text-xs text-amber-300 flex items-center gap-1 mt-0.5">
-                    <Church className="w-3.5 h-3.5" /> ክርስትና ስም: {selectedMember.christianName}
+                  <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5 pt-0.5">
+                    <Church className="w-3.5 h-3.5 text-amber-500" />
+                    <span>ክርስትና ስም: {selectedMember.christianName}</span>
                   </p>
                 )}
               </div>
               <button
                 onClick={() => setSelectedMember(null)}
-                className="text-white/70 hover:text-white p-2 rounded-lg"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 p-2 rounded-xl transition"
+                title="Close modal (Esc)"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Drawer Body */}
-            <div className="drawer-body space-y-6 text-sm">
-              {/* Status & Category Pills */}
-              <div className="flex items-center gap-2">
-                {getStatusBadge(selectedMember.status)}
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar text-sm">
+              {/* Badges Strip */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30">
                   {selectedMember.category}
                 </span>
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                <span className="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   {selectedMember.spiritualStatus}
                 </span>
+                {selectedMember.serviceDepartment && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                    <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{selectedMember.serviceDepartment}</span>
+                  </span>
+                )}
               </div>
 
               {/* Grid Attributes */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/70 p-4 rounded-xl border border-slate-800">
                 <div>
-                  <span className="text-xs text-slate-400 block">Gender & Age</span>
-                  <span className="font-semibold text-slate-800">
-                    {selectedMember.gender}, {selectedMember.age || "N/A"} years
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    Gender &amp; Age
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    {selectedMember.gender}, {selectedMember.age ? `${selectedMember.age} years` : "N/A"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-400 block">የአገልግሎት ክፍል (Ministry)</span>
-                  <span className="font-semibold text-indigo-700 dark:text-indigo-400">
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    የአገልግሎት ክፍል (Ministry)
+                  </span>
+                  <span className="font-bold text-indigo-300 text-sm">
                     {selectedMember.serviceDepartment || "ያልተመደበ"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-400 block">Academic Department (የትምህርት ክፍል)</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    Academic Dept (የትምህርት ክፍል)
+                  </span>
+                  <span className="font-bold text-white text-sm">
                     {selectedMember.academicDepartment || "Undeclared"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-400 block">Education Level</span>
-                  <span className="font-semibold text-slate-800">{selectedMember.educationLevel}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    Education Level
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    {selectedMember.educationLevel || "N/A"}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-400 block">Primary Language</span>
-                  <span className="font-semibold text-slate-800">{selectedMember.language || "አማርኛ"}</span>
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    Primary Language
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    {selectedMember.language || "አማርኛ"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+                    Campus Residence
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    {selectedMember.dormBlock || selectedMember.dormRoom
+                      ? `ብሎክ ${selectedMember.dormBlock || "N/A"} • ዶርም ${selectedMember.dormRoom || "N/A"}`
+                      : "Off Campus"}
+                  </span>
                 </div>
               </div>
 
-              {/* Contact & Campus Residence */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Contact & Residence
+              {/* Contact Information */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Contact Information
                 </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <span>{selectedMember.phoneNumber || "No phone registered"}</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2.5 text-slate-200">
+                    <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Phone</span>
+                      <span className="font-mono font-semibold text-sm">
+                        {selectedMember.phoneNumber || "No phone registered"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                    <span>{selectedMember.email || "No email registered"}</span>
+                  <div className="flex items-center gap-2.5 text-slate-200">
+                    <Mail className="w-4 h-4 text-sky-400 flex-shrink-0" />
+                    <div className="truncate">
+                      <span className="text-[10px] text-slate-400 block">Email</span>
+                      <span className="font-semibold text-sm truncate block">
+                        {selectedMember.email || "No email registered"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Building2 className="w-4 h-4 text-slate-400" />
-                    <span>
-                      Dorm: {selectedMember.dormBlock || "N/A"} - {selectedMember.dormRoom || "N/A"}
+                </div>
+              </div>
+
+              {/* Spiritual Heritage & Origin */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Spiritual Heritage &amp; Origin
+                </h4>
+                <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Origin Region</span>
+                    <span className="font-bold text-white text-sm">
+                      {selectedMember.originRegion || "አዲስ አበባ"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Sunday School Experience</span>
+                    <span className="font-bold text-amber-300 text-sm">
+                      {selectedMember.sundaySchoolDuration || "N/A"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Spiritual & Origin Heritage */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Spiritual Heritage & Origin
+              {/* Emergency Guardian */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Emergency Guardian (የተጠሪ መረጃ)
                 </h4>
-                <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-700">
+                <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <div>
-                    <span className="text-slate-400">Origin Region:</span>{" "}
-                    <span className="font-semibold">{selectedMember.originRegion || "አዲስ አበባ"}</span>
+                    <span className="text-[10px] text-slate-400 block">Guardian Full Name</span>
+                    <span className="font-bold text-white text-sm">
+                      {selectedMember.emergencyContactName || "Not Provided"}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400">Sunday School Experience:</span>{" "}
-                    <span className="font-semibold">{selectedMember.sundaySchoolDuration || "N/A"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Emergency Contact */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Emergency Guardian
-                </h4>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1">
-                  <div className="font-semibold text-slate-800">
-                    {selectedMember.emergencyContactName || "Not Provided"}
-                  </div>
-                  <div className="text-slate-500">{selectedMember.emergencyContactPhone || ""}</div>
+                  {selectedMember.emergencyContactPhone && (
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Guardian Phone</span>
+                      <span className="font-mono font-bold text-emerald-400 text-sm">
+                        {selectedMember.emergencyContactPhone}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Drawer Footer */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
+            {/* Modal Footer */}
+            <div className="p-4 sm:px-6 border-t border-slate-800 bg-slate-950/80 flex items-center justify-end gap-3">
               <button
-                onClick={() => {
-                  const m = selectedMember;
-                  setSelectedMember(null);
-                  openEditModal(m);
-                }}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition"
+                onClick={() => setSelectedMember(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
               >
-                Edit Profile
+                Close
               </button>
+              {hasPermission("members:write") && (
+                <button
+                  onClick={() => {
+                    const m = selectedMember;
+                    setSelectedMember(null);
+                    openEditModal(m);
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/30 transition flex items-center gap-1.5"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -72,6 +72,22 @@
   }
 }
 
+// Drawer / Full Detail Overlay in Front
+.cimas-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal-backdrop;
+  background-color: rgba(5, 8, 15, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
