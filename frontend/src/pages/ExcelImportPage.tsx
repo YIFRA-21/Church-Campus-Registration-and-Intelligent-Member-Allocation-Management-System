@@ -240,23 +240,9 @@ export const ExcelImportPage: React.FC = () => {
   };
 
   const handleFileSelected = (file: File) => {
-    const name = file.name.toLowerCase();
-    const isCsv = name.endsWith(".csv");
-    const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
-
-    if (!isCsv && !isExcel) {
-      setError(`Unsupported file format "${file.name}". Please provide a CSV (.csv) or Excel (.xlsx/.xls) spreadsheet.`);
-      setSelectedFile(null);
-      return;
-    }
-
     setSelectedFile(file);
     setError(null);
-    if (isExcel) {
-      setSuccessMsg(`Excel workbook selected: "${file.name}" (${(file.size / 1024).toFixed(1)} KB) · Ready for automated staging and column mapping.`);
-    } else {
-      setSuccessMsg(`CSV file selected: "${file.name}" (${(file.size / 1024).toFixed(1)} KB) · Ready for cryptographic staging.`);
-    }
+    setSuccessMsg(`File selected: "${file.name}" (${(file.size / 1024).toFixed(1)} KB) · Ready for automated staging and ingestion.`);
   };
 
   // Upload and Stage CSV
@@ -917,7 +903,7 @@ export const ExcelImportPage: React.FC = () => {
               <input
                 type="file"
                 id="csv-file-input"
-                accept=".csv, .xlsx, .xls"
+                accept=".csv, .xlsx, .xls, .xlsm, .ods, .tsv, .txt, *"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     handleFileSelected(e.target.files[0]);
@@ -931,26 +917,26 @@ export const ExcelImportPage: React.FC = () => {
               </div>
 
               <h4 className="text-lg font-bold text-white mb-1">
-                {selectedFile ? selectedFile.name : "Drag & Drop Member Spreadsheet Here"}
+                {selectedFile ? selectedFile.name : "Drag & Drop Member Spreadsheet or Data File Here"}
               </h4>
               <p className="text-sm text-slate-400 mb-4">
                 {selectedFile
                   ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready for staging & ingestion`
-                  : "Supports standard CSV (.csv) and Microsoft Excel (.xlsx, .xls) spreadsheets"}
+                  : "Accepts any file format: Microsoft Excel (.xlsx, .xls), CSV (.csv), TSV, or text files"}
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-300 border border-emerald-800/40">
-                  Excel (.xlsx/.xls) Supported
+                  Excel (.xlsx / .xls) Supported
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-950/50 text-cyan-300 border border-cyan-800/40">
+                  Universal File Ingestion
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  CSV (.csv) Compatible
+                  CSV / TSV / TXT
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  UTF-8 BOM
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
-                  Amharic &amp; English
+                  UTF-8 Unicode &amp; Amharic
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
                   SHA-256 Hashed

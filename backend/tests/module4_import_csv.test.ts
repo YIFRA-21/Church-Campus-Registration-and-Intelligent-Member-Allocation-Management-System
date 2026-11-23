@@ -254,4 +254,31 @@ describe("Module 4: Import & Validation Management (CSV Pipeline & Duplicate Rev
 
     expect(processRes.status).toBe(403);
   });
+
+  it("successfully accepts, parses, and stages legacy Excel (.xls) spreadsheets", async () => {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["full_name", "gender", "phone", "service_department"],
+      ["ቴዎድሮስ ካሳ", "MALE", "+251911334455", "መዝሙር"],
+      ["ሄለን ኃይሌ", "FEMALE", "+251922445566", "ትምህርት"],
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws, "Members");
+    const xlsBuffer = XLSX.write(wb, { bookType: "biff8", type: "buffer" });
+    const base64 = xlsBuffer.toString("base64");
+
+    const res = await request(app)
+      .post("/api/v1/imports/upload")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        campusId: "a0000000-0000-0000-0000-000000000001",
+        fileName: "ስልጠና.xls",
+        fileBase64: base64,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.batch.totalRows).toBe(2);
+    expect(res.body.data.sampleRows.length).toBeGreaterThanOrEqual(1);
+  });
 });

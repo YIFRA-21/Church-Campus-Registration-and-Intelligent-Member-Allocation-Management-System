@@ -634,7 +634,7 @@ export const MembersPage: React.FC = () => {
               className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white border border-slate-700 transition shadow-md hover:border-slate-500 active:scale-95"
               title="Refresh Directory"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : "text-slate-300"}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : "text-slate-300"}`} />Refresh
             </button>
 
             {/* New Member Registration Button */}
