@@ -149,6 +149,7 @@ export interface ImportRow {
 
 export interface BatchUploadResponse {
   batch: ImportBatch;
+  headers?: string[];
   suggestedMappings: Record<string, string>;
   sampleRows: Record<string, string>[];
 }

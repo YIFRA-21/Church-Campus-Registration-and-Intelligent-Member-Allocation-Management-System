@@ -281,4 +281,111 @@ describe("Module 4: Import & Validation Management (CSV Pipeline & Duplicate Rev
     expect(res.body.data.batch.totalRows).toBe(2);
     expect(res.body.data.sampleRows.length).toBeGreaterThanOrEqual(1);
   });
+
+  it("intelligently sniffs table headers and separates data when spreadsheet contains title banners and summary rows", async () => {
+    const rawSpreadsheetWithBanner =
+      "ስልጠና,,,,,,,,,,,,,,,,\n" +
+      "ወንዶች: 12 | ሴቶች: 20 | ዲያቆናት: 0 | ጠቅላላ: 32,,,,,,,,,,,,,,,,\n" +
+      "ተ.ቁ,ሙሉ ስም,ክርስትና ስም,ጾታ,ስልክ ቁጥር,ዲፓርትመንት,ብሎክ,ዶርም,ቋንቋ,የተጠሪ ስም,የተጠሪ ስልክ,የሰንበት ት/ቤት ቆይታ,,,,,\n" +
+      "1,ሲሳይ አለነ,ወልደጊዮርጊስ,ወንዶች,942064753,Natural,41,10,አማርኛ ሁሉም,ወይንሸት እምሩ,943495414,,,,,\n" +
+      "2,ታደለ ታዬ,ገብረሥላሴ,ወንዶች,940562470,Natural,41,10,አማርኛ ሁሉም,ማርሸት አለባቸው,972008323,,,,,\n" +
+      "3,ኤፍሬም ብርሃን,ተስፋ ጊዮርጊስ,ወንዶች,969531365,Natural,41,202,አማርኛ,ዝማው አስራት,938262881,✓,,,,,\n";
+
+    const base64 = Buffer.from(rawSpreadsheetWithBanner, "utf8").toString("base64");
+
+    const res = await request(app)
+      .post("/api/v1/imports/upload")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        campusId: "a0000000-0000-0000-0000-000000000001",
+        fileName: "fellowship_training_roster.csv",
+        fileBase64: base64,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.headers).toContain("ተ.ቁ");
+    expect(res.body.data.headers).toContain("ሙሉ ስም");
+    expect(res.body.data.headers).toContain("ጾታ");
+    expect(res.body.data.headers).toContain("ስልክ ቁጥር");
+    expect(res.body.data.headers).toContain("ዲፓርትመንት");
+    expect(res.body.data.headers).not.toContain("ስልጠና"); // Title banner skipped!
+    expect(res.body.data.batch.totalRows).toBe(3); // Exactly 3 data rows
+
+    // Verify auto mapping
+    const mappings = res.body.data.suggestedMappings;
+    expect(mappings["ተ.ቁ"]).toBe("serial_number");
+    expect(mappings["ሙሉ ስም"]).toBe("full_name");
+    expect(mappings["ክርስትና ስም"]).toBe("christian_name");
+    expect(mappings["ጾታ"]).toBe("gender");
+    expect(mappings["ስልክ ቁጥር"]).toBe("phone");
+    expect(mappings["ዲፓርትመንት"]).toBe("source_department_name");
+    expect(mappings["የተጠሪ ስም"]).toBe("emergency_contact_name");
+    expect(mappings["የተጠሪ ስልክ"]).toBe("emergency_contact_phone");
+
+    // Verify sample row separation
+    const sample = res.body.data.sampleRows[0];
+    expect(sample["ተ.ቁ"]).toBe("1");
+    expect(sample["ሙሉ ስም"]).toBe("ሲሳይ አለነ");
+    expect(sample["ጾታ"]).toBe("ወንዶች");
+    expect(sample["ስልክ ቁጥር"]).toBe("942064753");
+  });
+
+  it("successfully ingests the user's real-world training roster (ስልጠና.xls) with all 12 columns and rows separated", async () => {
+    const rawSpreadsheetWithBanner =
+      "ስልጠና,,,,,,,,,,,,,,,,\n" +
+      "ወንዶች: 12 | ሴቶች: 20 | ዲያቆናት: 0 | ጠቅላላ: 32,,,,,,,,,,,,,,,,\n" +
+      "ተ.ቁ,ሙሉ ስም,ክርስትና ስም,ጾታ,ስልክ ቁጥር,ዲፓርትመንት,ብሎክ,ዶርም,ቋንቋ,የተጠሪ ስም,የተጠሪ ስልክ,የሰንበት ት/ቤት ቆይታ,,,,,\n" +
+      "1,ሲሳይ አለነ,ወልደጊዮርጊስ,ወንዶች,942064753,Natural,41,10,አማርኛ ሁሉም,ወይንሸት እምሩ,943495414,,,,,\n" +
+      "2,ሞገስ ግርማዬ,ገብረ ማርያም,ወንዶች,999220063,Natural,41,111,,ግርማዬ አስማረ,962775928,,,,,\n" +
+      "3,ኤፍሬም ብርሃን,ተስፋ ጊዮርጊስ,ወንዶች,969531365,Natural,41,202,አማርኛ,ዝማው አስራት,938262881,✓,,,,,\n" +
+      "4,ድረስ አስቻለ,ገብረ ማርያም,ወንዶች,938139737,Social,24,12,አማርኛ,አስቻለው ሙሉ,950811470,✗,,,,,\n" +
+      "5,ደሳለኝ መሰለ,,ወንዶች,995596061,Social,38,3,ጉራጊኛ,መሰለ ወጂ,936482452,አለው,,,,,\n";
+
+    const base64 = Buffer.from(rawSpreadsheetWithBanner, "utf8").toString("base64");
+
+    const uploadRes = await request(app)
+      .post("/api/v1/imports/upload")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        campusId: "a0000000-0000-0000-0000-000000000001",
+        fileName: "ስልጠና_roster.csv",
+        fileBase64: base64,
+      });
+
+    expect(uploadRes.status).toBe(201);
+    expect(uploadRes.body.success).toBe(true);
+    expect(uploadRes.body.data.headers).toHaveLength(12);
+    expect(uploadRes.body.data.batch.totalRows).toBe(5);
+
+    // Verify all 12 columns correctly mapped
+    const mappings = uploadRes.body.data.suggestedMappings;
+    expect(mappings["ተ.ቁ"]).toBe("serial_number");
+    expect(mappings["ሙሉ ስም"]).toBe("full_name");
+    expect(mappings["ክርስትና ስም"]).toBe("christian_name");
+    expect(mappings["ጾታ"]).toBe("gender");
+    expect(mappings["ስልክ ቁጥር"]).toBe("phone");
+    expect(mappings["ዲፓርትመንት"]).toBe("source_department_name");
+    expect(mappings["ብሎክ"]).toBe("block");
+    expect(mappings["ዶርም"]).toBe("dormitory");
+    expect(mappings["ቋንቋ"]).toBe("language");
+    expect(mappings["የተጠሪ ስም"]).toBe("emergency_contact_name");
+    expect(mappings["የተጠሪ ስልክ"]).toBe("emergency_contact_phone");
+    expect(mappings["የሰንበት ት/ቤት ቆይታ"]).toBe("residence_or_sunday_school");
+
+    // Save mappings and validate batch
+    const batchId = uploadRes.body.data.batch.id;
+    const mappingsPayload = Object.entries(mappings).map(([csvColumn, targetField]) => ({
+      csvColumn,
+      targetField: targetField as string,
+    }));
+
+    const mapRes = await request(app)
+      .post(`/api/v1/imports/${batchId}/mapping`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ mappings: mappingsPayload });
+
+    expect(mapRes.status).toBe(200);
+    expect(mapRes.body.data.batch.validRows).toBe(5);
+  });
 });

@@ -199,39 +199,57 @@ export class ImportService {
    * to canonical C-CIMAS Module 3 member fields.
    */
   static readonly FIELD_ALIASES: Record<string, string[]> = {
-    serial_number: ["serial number", "serial_number", "member id", "member_id", "code", "ተ.ቁ", "ተ.ቁጥር", "መለያ"],
-    full_name: ["full name", "full_name", "name", "ሙሉ ስም", "ስም"],
-    christian_name: ["christian name", "christian_name", "baptismal name", "ክርስትና ስም", "የክርስትና ስም"],
+    serial_number: ["serial number", "serial_number", "member id", "member_id", "code", "ተ.ቁ", "ተ.ቁጥር", "መለያ", "ቁጥር", "no", "sn", "s/n"],
+    full_name: ["full name", "full_name", "name", "ሙሉ ስም", "የአባላት ስም", "የተማሪ ስም", "ስም"],
+    christian_name: ["christian name", "christian_name", "baptismal name", "ክርስትና ስም", "የክርስትና ስም", "ክርስትና"],
     gender: ["gender", "sex", "ጾታ"],
-    phone: ["phone", "phone number", "phone_number", "mobile", "ስልክ", "ስልክ ቁጥር", "ተንቀሳቃሽ"],
-    source_department_name: ["department", "academic department", "source_department_name", "faculty", "ዲፓርትመንት", "የትምህርት ክፍል"],
+    phone: ["phone", "phone number", "phone_number", "mobile", "cell", "ስልክ", "ስልክ ቁጥር", "ተንቀሳቃሽ"],
+    source_department_name: ["department", "academic department", "source_department_name", "faculty", "ትምህርት ክፍል", "የትምህርት ክፍል", "የትምህርት ዘርፍ", "ዲፓርትመንት"],
     service_department: ["service department", "service_department", "ministry", "fellowship department", "የአገልግሎት ክፍል", "አገልግሎት ክፍል", "የአገልግሎት ዘርፍ"],
     region: ["region", "origin region", "origin_region", "ክልል", "የትውልድ ክልል"],
     zone: ["zone", "ዞን"],
     woreda: ["woreda", "ወረዳ"],
     kebele: ["kebele", "ቀበሌ"],
     block: ["block", "dorm block", "dorm_block", "ብሎክ", "የዶርም ብሎክ"],
-    dormitory: ["dormitory", "dorm room", "dorm_room", "room", "ዶርም", "ክፍል"],
-    language: ["language", "ቋንቋ"],
-    emergency_contact_name: ["emergency contact name", "emergency_contact_name", "contact person", "የተጠሪ ስም", "ተጠሪ"],
-    emergency_contact_phone: ["emergency contact phone", "emergency_contact_phone", "contact phone", "የተጠሪ ስልክ", "ተጠሪ ስልክ"],
-    residence_or_sunday_school: ["sunday school", "sunday_school", "residence_or_sunday_school", "የሰንበት ት/ቤት", "የሰንበት ት/ቤት ቆይታ"],
+    dormitory: ["dormitory", "dorm room", "dorm_room", "room", "ዶርም", "የዶርም ቁጥር", "ክፍል"],
+    language: ["language", "ቋንቋ", "የቋንቋ ችሎታ"],
+    emergency_contact_name: ["emergency contact name", "emergency_contact_name", "contact person", "contact name", "የተጠሪ ስም", "ተጠሪ ስም", "ተጠሪ"],
+    emergency_contact_phone: ["emergency contact phone", "emergency_contact_phone", "contact phone", "emergency phone", "የተጠሪ ስልክ", "ተጠሪ ስልክ"],
+    residence_or_sunday_school: ["sunday school", "sunday_school", "residence_or_sunday_school", "የሰንበት ት/ቤት ቆይታ", "የሰንበት ት/ቤት", "ሰንበት ትምህርት ቤት"],
     age: ["age", "ዕድሜ"],
   };
 
   /**
    * Suggests the target field name for a given source CSV column header.
+   * Employs exact matching first, then longest matching alias to avoid
+   * short substring collisions (e.g. "የተጠሪ ስም" vs "ስም").
    */
   static suggestMapping(columnHeader: string): string | null {
     const norm = columnHeader.toLowerCase().trim();
+    if (!norm) return null;
+
+    // Pass 1: Exact match against all aliases
     for (const [targetField, aliases] of Object.entries(this.FIELD_ALIASES)) {
       for (const alias of aliases) {
-        if (norm === alias || norm.includes(alias)) {
+        if (norm === alias) {
           return targetField;
         }
       }
     }
-    return null;
+
+    // Pass 2: Longest alias substring match (longest first to avoid short collisions)
+    let bestMatch: { targetField: string; aliasLen: number } | null = null;
+    for (const [targetField, aliases] of Object.entries(this.FIELD_ALIASES)) {
+      for (const alias of aliases) {
+        if (norm.includes(alias) || alias.includes(norm)) {
+          if (!bestMatch || alias.length > bestMatch.aliasLen) {
+            bestMatch = { targetField, aliasLen: alias.length };
+          }
+        }
+      }
+    }
+
+    return bestMatch ? bestMatch.targetField : null;
   }
 
   /**
@@ -396,9 +414,7 @@ export class ImportService {
     const suggestedMappings: Record<string, string> = {};
     parsed.headers.forEach((h, colIndex) => {
       const suggested = this.suggestMapping(h);
-      if (suggested) {
-        suggestedMappings[h] = suggested;
-      }
+      suggestedMappings[h] = suggested || "ignored";
       importColumnMappingsStore.push({
         id: `cm000000-0000-0000-0000-${(importColumnMappingsStore.length + 1).toString().padStart(12, "0")}`,
         batchId,
@@ -455,6 +471,7 @@ export class ImportService {
 
     return {
       batch: batchRecord,
+      headers: parsed.headers,
       suggestedMappings,
       sampleRows: parsed.rows.slice(0, 5),
     };
@@ -583,17 +600,31 @@ export class ImportService {
             normalized.christianName = val;
             break;
           case "gender": {
-            const lowerG = val.toLowerCase();
-            if (lowerG === "female" || lowerG === "ሴት" || lowerG === "f") {
+            const lowerG = val.trim().toLowerCase();
+            if (
+              lowerG === "female" ||
+              lowerG === "f" ||
+              lowerG === "ሴት" ||
+              lowerG === "ሴቶች" ||
+              lowerG === "ሴ" ||
+              lowerG.startsWith("ሴ")
+            ) {
               normalized.gender = "FEMALE";
             } else {
               normalized.gender = "MALE";
             }
             break;
           }
-          case "phone":
-            normalized.phoneNumber = val;
+          case "phone": {
+            let cleaned = val.replace(/[\s\-\(\)]/g, "");
+            if (/^9\d{8}$/.test(cleaned)) {
+              cleaned = "0" + cleaned;
+            } else if (/^\+?2519\d{8}$/.test(cleaned)) {
+              cleaned = "0" + cleaned.replace(/^\+?251/, "");
+            }
+            normalized.phoneNumber = cleaned;
             break;
+          }
           case "source_department_name":
             normalized.academicDepartment = val;
             break;
@@ -624,9 +655,16 @@ export class ImportService {
           case "emergency_contact_name":
             normalized.emergencyContactName = val;
             break;
-          case "emergency_contact_phone":
-            normalized.emergencyContactPhone = val;
+          case "emergency_contact_phone": {
+            let cleaned = val.replace(/[\s\-\(\)]/g, "");
+            if (/^9\d{8}$/.test(cleaned)) {
+              cleaned = "0" + cleaned;
+            } else if (/^\+?2519\d{8}$/.test(cleaned)) {
+              cleaned = "0" + cleaned.replace(/^\+?251/, "");
+            }
+            normalized.emergencyContactPhone = cleaned;
             break;
+          }
           case "residence_or_sunday_school":
             normalized.sundaySchoolDuration = val;
             break;
@@ -1299,10 +1337,29 @@ export class ImportService {
     const mappings = importColumnMappingsStore.filter((m) => m.batchId === batchId);
     const rows = importRowsStore.filter((r) => r.batchId === batchId).slice(0, 10);
 
+    let sampleRows: Record<string, string>[] = [];
+    if (rows.length > 0) {
+      sampleRows = rows.slice(0, 5).map((r) => r.originalData);
+    } else {
+      let fileBuffer = originalFileBufferCache.get(batchId);
+      if (!fileBuffer && batch.filePath && fs.existsSync(batch.filePath)) {
+        try {
+          fileBuffer = fs.readFileSync(batch.filePath);
+        } catch {}
+      }
+      if (fileBuffer) {
+        try {
+          const parsed = CsvParser.parse(fileBuffer);
+          sampleRows = parsed.rows.slice(0, 5);
+        } catch {}
+      }
+    }
+
     return {
       batch,
       mappings,
       previewRows: rows,
+      sampleRows,
     };
   }
 

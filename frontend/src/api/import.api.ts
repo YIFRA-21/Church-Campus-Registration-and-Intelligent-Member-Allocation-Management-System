@@ -118,6 +118,7 @@ export async function fetchBatchPreview(
   batch: ImportBatch;
   mappings: any[];
   sampleRows: Record<string, string>[];
+  previewRows?: any[];
 }> {
   const response = await fetch(`${BASE_URL}/imports/${batchId}/preview`, {
     headers: {

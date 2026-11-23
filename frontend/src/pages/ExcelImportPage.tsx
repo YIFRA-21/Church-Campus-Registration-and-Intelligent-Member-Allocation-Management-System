@@ -176,7 +176,7 @@ export const ExcelImportPage: React.FC = () => {
 
       try {
         const preview = await fetchBatchPreview(batchId, token);
-        if (preview.mappings) {
+        if (preview.mappings && preview.mappings.length > 0) {
           const mapObj: Record<string, string> = {};
           preview.mappings.forEach((m: any) => {
             mapObj[m.csvColumnName] = m.systemFieldName;
@@ -184,8 +184,10 @@ export const ExcelImportPage: React.FC = () => {
           setCurrentMappings(mapObj);
           setDetectedHeaders(preview.mappings.map((m: any) => m.csvColumnName));
         }
-        if (preview.sampleRows) {
+        if (preview.sampleRows && preview.sampleRows.length > 0) {
           setSampleRows(preview.sampleRows);
+        } else if (preview.previewRows && preview.previewRows.length > 0) {
+          setSampleRows(preview.previewRows.map((r: any) => r.originalData || {}));
         }
       } catch {
         // Mappings might not be established yet
@@ -270,8 +272,12 @@ export const ExcelImportPage: React.FC = () => {
 
           setActiveBatch(uploadRes.batch);
           setCurrentMappings(uploadRes.suggestedMappings);
-          setDetectedHeaders(Object.keys(uploadRes.suggestedMappings));
-          setSampleRows(uploadRes.sampleRows);
+          const headers =
+            uploadRes.headers && uploadRes.headers.length > 0
+              ? uploadRes.headers
+              : Object.keys(uploadRes.suggestedMappings);
+          setDetectedHeaders(headers);
+          setSampleRows(uploadRes.sampleRows || []);
           await loadBatches();
 
           setSuccessMsg(

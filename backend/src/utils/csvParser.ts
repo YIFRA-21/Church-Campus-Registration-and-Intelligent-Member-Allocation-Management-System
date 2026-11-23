@@ -143,16 +143,152 @@ export class CsvParser {
       };
     }
 
-    const headers = rawRows[0].map((h) => h.trim());
-    const dataRows = rawRows.slice(1);
+    // -------------------------------------------------------------------------
+    // INTELLIGENT SPREADSHEET HEADER SNIFFING
+    // Automatically detects real table header row even when file contains
+    // title banners, campus metadata, or summary lines (e.g. Ethiopian church rosters)
+    // -------------------------------------------------------------------------
+    const knownHeaderKeywords = [
+      // Serial / ID / Code
+      "ተ.ቁ", "ተ.ቁጥር", "መለያ", "ቁጥር", "no", "sn", "s/n", "serial", "code", "id",
+      // Names
+      "ሙሉ ስም", "ስም", "የአባት ስም", "የአያት ስም", "first name", "last name", "full name", "name",
+      // Christian / Baptismal name
+      "ክርስትና ስም", "የክርስትና ስም", "ክርስትና", "baptismal name", "christian name",
+      // Gender
+      "ጾታ", "gender", "sex",
+      // Phone / Contact
+      "ስልክ", "ስልክ ቁጥር", "ተንቀሳቃሽ", "phone", "phone number", "mobile", "tel",
+      // Department
+      "ዲፓርትመንት", "የትምህርት ክፍል", "የትምህርት ዘርፍ", "የአገልግሎት ክፍል", "አገልግሎት", "department", "academic department", "service department", "faculty",
+      // Block & Dormitory
+      "ብሎክ", "የዶርም ብሎክ", "block", "dorm block",
+      "ዶርም", "ክፍል", "የዶርም ቁጥር", "dorm", "dormitory", "room",
+      // Language
+      "ቋንቋ", "የቋንቋ ችሎታ", "language",
+      // Emergency contact
+      "የተጠሪ ስም", "ተጠሪ ስም", "ተጠሪ", "contact person", "emergency contact", "contact name",
+      "የተጠሪ ስልክ", "ተጠሪ ስልክ", "emergency phone", "contact phone",
+      // Sunday school / residence
+      "የሰንበት ት/ቤት", "የሰንበት ት/ቤት ቆይታ", "ሰንበት ትምህርት ቤት", "sunday school",
+      // Demographics
+      "ክልል", "የትውልድ ክልል", "ዞን", "ወረዳ", "ቀበሌ", "region", "zone", "woreda", "kebele",
+      "ዕድሜ", "age", "email", "status"
+    ];
 
-    const rows: Record<string, string>[] = [];
-    for (const r of dataRows) {
-      const rowObj: Record<string, string> = {};
-      for (let c = 0; c < headers.length; c++) {
-        const header = headers[c];
-        rowObj[header] = r[c] !== undefined ? r[c] : "";
+    let bestHeaderRowIndex = 0;
+    let highestScore = -1;
+
+    const maxScanRows = Math.min(rawRows.length, 15);
+    for (let rIdx = 0; rIdx < maxScanRows; rIdx++) {
+      const candidateRow = rawRows[rIdx];
+      const nonEmptyCells = candidateRow.map((c) => c.trim()).filter((c) => c.length > 0);
+      if (nonEmptyCells.length === 0) continue;
+
+      let score = 0;
+      let keywordMatches = 0;
+
+      for (const cell of nonEmptyCells) {
+        const lowerCell = cell.toLowerCase();
+
+        // Heavy penalty for summary/stats banner rows: e.g. "ወንዶች: 12 | ሴቶች: 20 | ዲያቆናት: 0 | ጠቅላላ: 32"
+        if (
+          cell.includes(":") ||
+          cell.includes("|") ||
+          lowerCell.includes("ጠቅላላ") ||
+          lowerCell.includes("ድምር") ||
+          lowerCell.includes("total") ||
+          lowerCell.includes("count")
+        ) {
+          score -= 20;
+        }
+
+        // Keyword matches (+12 per keyword)
+        for (const kw of knownHeaderKeywords) {
+          if (lowerCell === kw || lowerCell.includes(kw)) {
+            keywordMatches++;
+            score += 12;
+            break;
+          }
+        }
       }
+
+      // Add points for non-empty distinct cells (tables have 4+ columns; title rows usually have 1)
+      score += nonEmptyCells.length * 2;
+
+      // Real header rows typically have >= 2 keyword matches
+      if (keywordMatches >= 2) {
+        score += 30;
+      }
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestHeaderRowIndex = rIdx;
+      }
+    }
+
+    const headerRowIndex = highestScore >= 10 ? bestHeaderRowIndex : 0;
+    const rawHeaderRow = rawRows[headerRowIndex];
+
+    // Find the last non-empty column index to trim trailing blank columns
+    let lastNonEmptyCol = -1;
+    for (let c = rawHeaderRow.length - 1; c >= 0; c--) {
+      if (rawHeaderRow[c] && rawHeaderRow[c].trim().length > 0) {
+        lastNonEmptyCol = c;
+        break;
+      }
+    }
+    if (lastNonEmptyCol === -1) {
+      lastNonEmptyCol = rawHeaderRow.length - 1;
+    }
+
+    // Sanitize, name empty columns, and deduplicate headers
+    const headers: string[] = [];
+    const seenHeaderCounts = new Map<string, number>();
+
+    for (let c = 0; c <= lastNonEmptyCol; c++) {
+      let h = (rawHeaderRow[c] || "").trim();
+      if (!h) {
+        h = `Column_${c + 1}`;
+      }
+      if (seenHeaderCounts.has(h)) {
+        const count = seenHeaderCounts.get(h)! + 1;
+        seenHeaderCounts.set(h, count);
+        h = `${h}_${count}`;
+      } else {
+        seenHeaderCounts.set(h, 1);
+      }
+      headers.push(h);
+    }
+
+    // Slice data rows below header and filter out empty or trailing summary rows
+    const rawDataRows = rawRows.slice(headerRowIndex + 1);
+    const dataRows: string[][] = [];
+    const rows: Record<string, string>[] = [];
+
+    for (const r of rawDataRows) {
+      const hasData = r.slice(0, headers.length).some((cell) => cell && cell.trim().length > 0);
+      if (!hasData) continue;
+
+      const firstCell = (r[0] || "").trim().toLowerCase();
+      if (
+        firstCell.startsWith("ድምር") ||
+        firstCell.startsWith("ጠቅላላ") ||
+        firstCell.startsWith("total")
+      ) {
+        continue;
+      }
+
+      const rowSlice: string[] = [];
+      const rowObj: Record<string, string> = {};
+
+      for (let c = 0; c < headers.length; c++) {
+        const val = r[c] !== undefined ? r[c].trim() : "";
+        rowSlice.push(val);
+        rowObj[headers[c]] = val;
+      }
+
+      dataRows.push(rowSlice);
       rows.push(rowObj);
     }
 
