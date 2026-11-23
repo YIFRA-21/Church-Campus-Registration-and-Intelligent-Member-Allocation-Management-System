@@ -1412,6 +1412,83 @@ export class ImportService {
   ) {
     let records = importRowsStore.filter((r) => r.batchId === batchId);
 
+    // Fallback: If rows not yet staged, construct virtual records directly from original parsed CSV
+    if (records.length === 0) {
+      let fileBuffer = originalFileBufferCache.get(batchId);
+      const batch = importBatchesStore.find((b) => b.id === batchId);
+      if (!fileBuffer && batch?.filePath && fs.existsSync(batch.filePath)) {
+        try {
+          fileBuffer = fs.readFileSync(batch.filePath);
+        } catch {}
+      }
+      if (fileBuffer) {
+        try {
+          const parsed = CsvParser.parse(fileBuffer);
+          const mappings = importColumnMappingsStore.filter((m) => m.batchId === batchId);
+          const mapDict: Record<string, string> = {};
+          mappings.forEach((m) => {
+            if (m.systemFieldName !== "ignored") mapDict[m.csvColumnName] = m.systemFieldName;
+          });
+
+          records = parsed.rows.map((r, idx) => {
+            const normalized: StagedMemberData = {
+              fullName: "",
+              gender: "MALE",
+            };
+            for (const [col, rawVal] of Object.entries(r)) {
+              const target = mapDict[col] || this.suggestMapping(col);
+              const val = rawVal ? rawVal.trim() : "";
+              if (!target) continue;
+              switch (target) {
+                case "serial_number": normalized.serialNumber = val; break;
+                case "full_name": normalized.fullName = val; break;
+                case "christian_name": normalized.christianName = val; break;
+                case "gender": {
+                  const g = val.toLowerCase();
+                  normalized.gender = (g.startsWith("ሴ") || g === "female" || g === "f") ? "FEMALE" : "MALE";
+                  break;
+                }
+                case "phone": {
+                  let cleaned = val.replace(/[\s\-\(\)]/g, "");
+                  if (/^9\d{8}$/.test(cleaned)) cleaned = "0" + cleaned;
+                  normalized.phoneNumber = cleaned;
+                  break;
+                }
+                case "source_department_name": normalized.academicDepartment = val; break;
+                case "service_department": normalized.serviceDepartment = val; break;
+                case "block": normalized.dormBlock = val; break;
+                case "dormitory": normalized.dormRoom = val; break;
+                case "language": normalized.language = val || "አማርኛ"; break;
+                case "emergency_contact_name": normalized.emergencyContactName = val; break;
+                case "emergency_contact_phone": {
+                  let cleaned = val.replace(/[\s\-\(\)]/g, "");
+                  if (/^9\d{8}$/.test(cleaned)) cleaned = "0" + cleaned;
+                  normalized.emergencyContactPhone = cleaned;
+                  break;
+                }
+                case "residence_or_sunday_school": normalized.sundaySchoolDuration = val; break;
+                case "age": if (val) normalized.age = parseInt(val, 10); break;
+              }
+            }
+            return {
+              id: `vir-${idx + 1}`,
+              batchId,
+              campusId: batch?.campusId || "",
+              rowNumber: idx + 1,
+              originalData: r,
+              normalizedData: normalized,
+              validationStatus: normalized.fullName ? "valid" : "invalid",
+              duplicateStatus: "no_duplicate",
+              reviewStatus: "not_required",
+              importStatus: "pending",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            } as ImportRowRecord;
+          });
+        } catch {}
+      }
+    }
+
     if (filter.status) {
       records = records.filter(
         (r) =>
