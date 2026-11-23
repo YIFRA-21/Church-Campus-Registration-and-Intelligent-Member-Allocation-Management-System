@@ -49,6 +49,8 @@ import {
   Archive,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   CheckSquare,
   Square,
   Activity,
@@ -101,6 +103,22 @@ const ETHIOPIAN_LANGUAGES = [
 
 const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#6366F1"];
 
+const PAGE_SIZE_OPTIONS = [20, 30, 40, 50, 100, 200, 300, 500, 1000];
+
+// Smart pagination items generator with ellipses
+const getPaginationItems = (currentPage: number, total: number): (number | string)[] => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, "...", total];
+  }
+  if (currentPage >= total - 3) {
+    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", total];
+};
+
 export const MembersPage: React.FC = () => {
   const { token, hasPermission, user } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -117,8 +135,10 @@ export const MembersPage: React.FC = () => {
   const [spiritualFilter, setSpiritualFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [jumpPage, setJumpPage] = useState<string>("");
 
   // Multi-selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -225,7 +245,7 @@ export const MembersPage: React.FC = () => {
         spiritualStatus: (spiritualFilter as SpiritualStatus) || undefined,
         status: (statusFilter as MemberStatus) || undefined,
         page,
-        limit: 10,
+        limit: pageSize,
       });
       setMembers(res.members);
       setTotalPages(res.pagination.totalPages);
@@ -235,7 +255,7 @@ export const MembersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, selectedCampusId, search, genderFilter, categoryFilter, spiritualFilter, statusFilter, page]);
+  }, [token, selectedCampusId, search, genderFilter, categoryFilter, spiritualFilter, statusFilter, page, pageSize]);
 
   useEffect(() => {
     loadMembers();
@@ -902,7 +922,7 @@ export const MembersPage: React.FC = () => {
 
         {/* 4. ADVANCED FILTERING & SEARCH TOOLBAR (HIGH CONTRAST & CRISP) */}
         <div className="rounded-2xl bg-slate-900/95 border border-slate-800 p-4 sm:p-5 shadow-xl space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
             {/* Search Input */}
             <div className="lg:col-span-2 relative">
               <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
@@ -986,6 +1006,25 @@ export const MembersPage: React.FC = () => {
                 <option value="">All Genders</option>
                 <option value="MALE">MALE</option>
                 <option value="FEMALE">FEMALE</option>
+              </select>
+            </div>
+
+            {/* Page Size (Rows per page) Filter */}
+            <div>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition shadow-inner font-medium"
+                title="Members per page"
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>
+                    {size} per page {size === 20 ? "(Default)" : ""}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -1122,9 +1161,9 @@ export const MembersPage: React.FC = () => {
                           </button>
                         </td>
 
-                        {/* ተ.ቁ (Serial / Row Number) matching user screenshot */}
+                        {/* ተ.ቁ (Serial / Row Number) dynamically computed from page and pageSize */}
                         <td className="text-center font-mono text-xs font-bold text-slate-400">
-                          {(page - 1) * 10 + index + 1}
+                          {(page - 1) * pageSize + index + 1}
                         </td>
 
                         {/* Member ID Code */}
@@ -1263,28 +1302,158 @@ export const MembersPage: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          <div className="table-pagination">
-            <div>
-              Showing {members.length} of {totalCount} total members (Page {page} of {totalPages || 1})
+          {/* Professional Attractive Pagination Bar */}
+          <div className="p-4 sm:px-6 bg-slate-950/95 border-t border-slate-800/80 flex flex-col xl:flex-row items-center justify-between gap-4 select-none">
+            {/* Left Section: Detailed Range & Total Count + Rows selector */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>
+                  Showing{" "}
+                  <strong className="text-white font-bold">
+                    {totalCount === 0 ? 0 : (page - 1) * pageSize + 1}
+                  </strong>
+                  –
+                  <strong className="text-white font-bold">
+                    {Math.min(page * pageSize, totalCount)}
+                  </strong>{" "}
+                  of <strong className="text-indigo-300 font-bold">{totalCount.toLocaleString()}</strong> total members
+                  <span className="ml-2 text-slate-500 font-medium">
+                    (Page {page} of {totalPages || 1})
+                  </span>
+                </span>
+              </div>
+
+              {/* Rows Per Page Quick Selector */}
+              <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 shadow-sm">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Show:
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer pr-1"
+                >
+                  {PAGE_SIZE_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} className="bg-slate-900 text-white">
+                      {opt} rows {opt === 20 ? "(Default)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1 font-medium"
+            {/* Right Section: Pagination Controls & Jump to Page */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Jump to Page Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const p = parseInt(jumpPage, 10);
+                  if (!isNaN(p) && p >= 1 && p <= totalPages) {
+                    setPage(p);
+                    setJumpPage("");
+                  }
+                }}
+                className="hidden md:flex items-center gap-1.5 text-xs text-slate-400 mr-2"
               >
-                <ChevronLeft className="w-3.5 h-3.5" /> Previous
-              </button>
-              <span className="font-semibold text-slate-700 dark:text-slate-200 px-2">{page}</span>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1 font-medium"
-              >
-                Next <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+                <span>Jump to:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages || 1}
+                  placeholder={String(page)}
+                  value={jumpPage}
+                  onChange={(e) => setJumpPage(e.target.value)}
+                  className="w-12 px-2 py-1 bg-slate-900 border border-slate-700/80 rounded-lg text-xs text-center text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!jumpPage}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 text-xs font-semibold transition"
+                >
+                  Go
+                </button>
+              </form>
+
+              {/* Navigation Button Group */}
+              <div className="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80">
+                {/* First Page */}
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(1)}
+                  className="p-1.5 rounded-lg border border-transparent hover:border-slate-700/80 hover:bg-slate-800 text-slate-300 disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  title="First Page (ገጽ 1)"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </button>
+
+                {/* Previous Page */}
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="px-2.5 py-1.5 rounded-lg border border-transparent hover:border-slate-700/80 hover:bg-slate-800 text-slate-300 disabled:opacity-25 disabled:cursor-not-allowed transition flex items-center gap-1 text-xs font-semibold"
+                  title="Previous Page (ያለፈው ገጽ)"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Prev</span>
+                </button>
+
+                {/* Numbered Page Pills */}
+                <div className="flex items-center gap-1 px-1">
+                  {getPaginationItems(page, totalPages).map((item, idx) => {
+                    if (item === "...") {
+                      return (
+                        <span
+                          key={`dots-${idx}`}
+                          className="px-1.5 text-slate-500 font-bold select-none text-xs"
+                        >
+                          &hellip;
+                        </span>
+                      );
+                    }
+                    const pageNum = Number(item);
+                    const isActive = pageNum === page;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center ${
+                          isActive
+                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 ring-1 ring-indigo-400 font-extrabold"
+                            : "border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next Page */}
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-2.5 py-1.5 rounded-lg border border-transparent hover:border-slate-700/80 hover:bg-slate-800 text-slate-300 disabled:opacity-25 disabled:cursor-not-allowed transition flex items-center gap-1 text-xs font-semibold"
+                  title="Next Page (ቀጣይ ገጽ)"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* Last Page */}
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(totalPages)}
+                  className="p-1.5 rounded-lg border border-transparent hover:border-slate-700/80 hover:bg-slate-800 text-slate-300 disabled:opacity-25 disabled:cursor-not-allowed transition"
+                  title="Last Page (የመጨረሻው ገጽ)"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

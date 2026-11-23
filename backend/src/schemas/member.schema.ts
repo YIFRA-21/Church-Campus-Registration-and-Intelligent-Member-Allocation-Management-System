@@ -116,7 +116,7 @@ export const MemberFilterSchema = z.object({
   sortBy: z.enum(["fullName", "memberId", "age", "createdAt", "status"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(1000).default(20),
 });
 
 export type MemberFilterInput = z.infer<typeof MemberFilterSchema>;
