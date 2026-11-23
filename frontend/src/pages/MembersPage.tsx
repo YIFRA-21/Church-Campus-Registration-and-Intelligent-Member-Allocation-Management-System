@@ -1099,10 +1099,10 @@ export const MembersPage: React.FC = () => {
         {/* 6. PRIMARY DATA TABLE WITH DYNAMIC SCSS GLASS CONTAINER */}
         <div className="cimas-table-container">
           <div className="table-responsive">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="w-10 text-center">
+            <table className="w-full text-left border-separate border-spacing-0 text-sm">
+              <thead className="bg-[#0b111e] dark:bg-[#0b111e] sticky top-0 z-10 border-b-2 border-slate-700/80">
+                <tr className="divide-x divide-slate-800/80 text-xs">
+                  <th className="w-12 px-3 py-3.5 text-center bg-[#0b111e]">
                     <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-200">
                       {selectedIds.length > 0 && selectedIds.length === members.length ? (
                         <CheckSquare className="w-4 h-4 text-indigo-500" />
@@ -1111,16 +1111,36 @@ export const MembersPage: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  <th className="w-12 text-center text-xs font-bold text-cyan-400">ተ.ቁ</th>
-                  <th>Member ID & Code</th>
-                  <th>Full & Christian Name</th>
-                  <th>Gender & Age</th>
-                  <th>የአገልግሎት ክፍል</th>
-                  <th>Academic Dept / Category</th>
-                  <th>Spiritual Status</th>
-                  <th>Contact</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-right">Actions</th>
+                  <th className="w-16 px-3 py-3.5 text-center font-black uppercase tracking-wider text-cyan-400 bg-[#0b111e]">
+                    ተ.ቁ
+                  </th>
+                  <th className="min-w-[140px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Member ID &amp; Code
+                  </th>
+                  <th className="min-w-[200px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Full &amp; Christian Name
+                  </th>
+                  <th className="min-w-[120px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Gender &amp; Age
+                  </th>
+                  <th className="min-w-[170px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-indigo-300 bg-[#0b111e]">
+                    የአገልግሎት ክፍል
+                  </th>
+                  <th className="min-w-[190px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Academic Dept / Category
+                  </th>
+                  <th className="min-w-[140px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Spiritual Status
+                  </th>
+                  <th className="min-w-[160px] px-4 py-3.5 font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Contact
+                  </th>
+                  <th className="min-w-[120px] px-4 py-3.5 text-center font-extrabold uppercase tracking-wider text-slate-200 bg-[#0b111e]">
+                    Status
+                  </th>
+                  <th className="min-w-[190px] px-4 py-3.5 text-center font-black uppercase tracking-wider text-slate-100 sticky right-0 z-20 bg-[#0b111e] border-l-2 border-slate-700/80 shadow-[-8px_0_16px_rgba(0,0,0,0.6)]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1145,13 +1165,15 @@ export const MembersPage: React.FC = () => {
                     return (
                       <tr
                         key={m.id}
-                        className={isSelected ? "row-selected" : ""}
+                        className={`group transition duration-150 border-b border-slate-800/60 divide-x divide-slate-800/40 hover:bg-slate-800/40 ${
+                          isSelected ? "bg-indigo-950/40" : ""
+                        }`}
                       >
-                        {/* Checkbox */}
-                        <td className="text-center">
+                        {/* 1. Checkbox */}
+                        <td className="w-12 px-3 py-3 text-center whitespace-nowrap">
                           <button
                             onClick={() => toggleSelectOne(m.id)}
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                            className="text-slate-400 hover:text-slate-200 transition"
                           >
                             {isSelected ? (
                               <CheckSquare className="w-4 h-4 text-indigo-500" />
@@ -1161,132 +1183,142 @@ export const MembersPage: React.FC = () => {
                           </button>
                         </td>
 
-                        {/* ተ.ቁ (Serial / Row Number) dynamically computed from page and pageSize */}
-                        <td className="text-center font-mono text-xs font-bold text-slate-400">
+                        {/* 2. ተ.ቁ (Serial / Row Number) dynamically computed from page and pageSize */}
+                        <td className="w-16 px-3 py-3 text-center font-mono text-xs font-bold text-cyan-400 whitespace-nowrap">
                           {(page - 1) * pageSize + index + 1}
                         </td>
 
-                        {/* Member ID Code */}
-                        <td>
-                          <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                        {/* 3. Member ID Code */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="font-mono text-xs font-bold text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded-md border border-indigo-800/80 shadow-sm">
                             {m.memberId}
                           </span>
                         </td>
 
-                        {/* Full & Christian Name */}
-                        <td>
-                          <div className="font-semibold text-slate-900 dark:text-slate-100">{m.fullName}</div>
-                          {m.christianName && (
-                            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                              <Church className="w-3 h-3 text-amber-500" />
-                              {m.christianName}
+                        {/* 4. Full & Christian Name */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-bold text-white tracking-tight">{m.fullName}</div>
+                          {m.christianName ? (
+                            <div className="text-xs text-amber-400 font-medium flex items-center gap-1.5 mt-0.5">
+                              <Church className="w-3.5 h-3.5 text-amber-500" />
+                              <span>{m.christianName}</span>
                             </div>
-                          )}
+                          ) : null}
                         </td>
 
-                        {/* Gender & Age */}
-                        <td className="text-slate-600 dark:text-slate-300">
-                          <div>{m.gender}</div>
+                        {/* 5. Gender & Age */}
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-300">
+                          <div className="font-semibold text-slate-200">{m.gender}</div>
                           <div className="text-xs text-slate-400">{m.age ? `${m.age} yrs` : "N/A"}</div>
                         </td>
 
-                        {/* የአገልግሎት ክፍል (Ministry Service Department) */}
-                        <td>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-950/60 text-indigo-300 border border-indigo-800/80">
-                            <Layers className="w-3 h-3 text-indigo-400" />
-                            {m.serviceDepartment || "ያልተመደበ"}
+                        {/* 6. Ministry Service Department (የአገልግሎት ክፍል) */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-950/70 text-indigo-300 border border-indigo-700/60 shadow-sm">
+                            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>{m.serviceDepartment || "ያልተመደበ"}</span>
                           </span>
                         </td>
 
-                        {/* Academic Dept / Category */}
-                        <td>
-                          <div className="text-slate-800 dark:text-slate-200 font-medium">
+                        {/* 7. Academic Dept / Category */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="text-slate-200 font-medium text-xs">
                             {m.academicDepartment || "Undeclared"}
                           </div>
-                          <span className="inline-block text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-1.5 py-0.2 rounded border border-purple-200 dark:border-purple-800">
+                          <span className="inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/60">
                             {m.category}
                           </span>
                         </td>
 
-                        {/* Spiritual Status */}
-                        <td>
+                        {/* 8. Spiritual Status */}
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
                               m.spiritualStatus === "DEACON"
-                                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+                                ? "bg-amber-950/70 text-amber-300 border-amber-600/60 shadow-sm"
                                 : m.spiritualStatus === "SERVANT"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700"
-                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                ? "bg-blue-950/70 text-blue-300 border-blue-600/60 shadow-sm"
+                                : "bg-slate-800/90 text-slate-300 border-slate-700/60"
                             }`}
                           >
                             {m.spiritualStatus}
                           </span>
                         </td>
 
-                        {/* Contact */}
-                        <td className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
+                        {/* 9. Contact */}
+                        <td className="px-4 py-3 whitespace-nowrap text-xs space-y-0.5">
                           {m.phoneNumber && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 text-slate-200 font-mono">
                               <Phone className="w-3 h-3 text-slate-400" />
-                              {m.phoneNumber}
+                              <span>{m.phoneNumber}</span>
                             </div>
                           )}
                           {m.dormRoom && (
-                            <div className="text-[11px] text-slate-400">Dorm: {m.dormRoom}</div>
+                            <div className="text-[11px] text-slate-400">
+                              Dorm: <span className="text-slate-300 font-medium">{m.dormRoom}</span>
+                            </div>
                           )}
                         </td>
 
-                        {/* Status */}
-                        <td className="text-center">{getStatusBadge(m.status)}</td>
+                        {/* 10. Status */}
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                          {getStatusBadge(m.status)}
+                        </td>
 
-                        {/* Actions */}
-                        <td className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {/* View Profile Drawer */}
+                        {/* 11. Actions: Sticky Pinned Column on the Right with Attractive Themed Icons */}
+                        <td
+                          className={`min-w-[190px] px-4 py-3 text-center whitespace-nowrap sticky right-0 z-10 border-l-2 border-slate-700/80 shadow-[-8px_0_16px_rgba(0,0,0,0.6)] transition duration-150 ${
+                            isSelected
+                              ? "bg-[#181d38] group-hover:bg-[#1f2648]"
+                              : "bg-[#111a2e] group-hover:bg-[#17233b]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-center gap-1.5">
+                            {/* 1. View Full Profile */}
                             <button
                               onClick={() => setSelectedMember(m)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              className="p-1.5 rounded-xl text-sky-400 bg-sky-500/10 hover:bg-sky-500/25 hover:text-sky-200 border border-sky-500/25 hover:border-sky-400/60 shadow-sm hover:shadow-sky-500/20 active:scale-90 transition duration-150"
                               title="View Full Profile (360°)"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
 
-                            {/* Edit (Rule 6: Member Code Immutable) */}
+                            {/* 2. Edit Profile (Rule 6: Member Code Immutable) */}
                             {hasPermission("members:write") && (
                               <button
                                 onClick={() => openEditModal(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/25 hover:text-indigo-200 border border-indigo-500/25 hover:border-indigo-400/60 shadow-sm hover:shadow-indigo-500/20 active:scale-90 transition duration-150"
                                 title="Edit Member Profile"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
                             )}
 
-                            {/* Status Change (Rule 9: Mandatory Justification) */}
+                            {/* 3. Status Change (Rule 9: Mandatory Justification) */}
                             {hasPermission("members:write") && (
                               <button
                                 onClick={() => openStatusModal(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-xl text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/25 hover:text-emerald-200 border border-emerald-500/25 hover:border-emerald-400/60 shadow-sm hover:shadow-emerald-500/20 active:scale-90 transition duration-150"
                                 title="Transition Member Status"
                               >
                                 <UserCheck className="w-4 h-4" />
                               </button>
                             )}
 
-                            {/* Audit Trail Timeline */}
+                            {/* 4. Audit Trail Timeline */}
                             <button
                               onClick={() => openHistoryModal(m)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              className="p-1.5 rounded-xl text-purple-400 bg-purple-500/10 hover:bg-purple-500/25 hover:text-purple-200 border border-purple-500/25 hover:border-purple-400/60 shadow-sm hover:shadow-purple-500/20 active:scale-90 transition duration-150"
                               title="Audit History Timeline"
                             >
                               <History className="w-4 h-4" />
                             </button>
 
-                            {/* Soft Archive / Delete */}
+                            {/* 5. Soft Archive / Delete */}
                             {hasPermission("members:delete") && (
                               <button
                                 onClick={() => setDeletingMember(m)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-xl text-rose-400 bg-rose-500/10 hover:bg-rose-500/25 hover:text-rose-200 border border-rose-500/25 hover:border-rose-400/60 shadow-sm hover:shadow-rose-500/20 active:scale-90 transition duration-150"
                                 title="Archive Member Record"
                               >
                                 <Trash2 className="w-4 h-4" />

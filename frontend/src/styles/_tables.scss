@@ -84,6 +84,30 @@
     }
   }
 
+  .sticky-col-right {
+    position: sticky;
+    right: 0;
+    z-index: 10;
+    background: #111a2e;
+    border-left: 2px solid rgba(51, 65, 85, 0.8);
+    box-shadow: -8px 0 16px rgba(0, 0, 0, 0.5);
+
+    html:not(.dark) & {
+      background: #ffffff;
+      border-left: 2px solid #cbd5e1;
+      box-shadow: -6px 0 14px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  thead th.sticky-col-right {
+    z-index: 20;
+    background: #0b111e;
+
+    html:not(.dark) & {
+      background: #f1f5f9;
+    }
+  }
+
   .table-pagination-bar {
     padding: 1rem 1.25rem;
     background: #0b111e;
